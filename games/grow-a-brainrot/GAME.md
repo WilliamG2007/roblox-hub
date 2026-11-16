@@ -154,6 +154,14 @@ Random, about every 15–25 min, lasting 2–3 min: **Pasta Rain**, **Thundersto
 
 ---
 
+## Code map (M1)
+- `shared/Config/`: `Game` (tuning), `Rarities`, `Brainrots` (roster). Balance changes go here.
+- `shared/BrainrotModels`: builds a brainrot model; uses `ReplicatedStorage.Assets.Brainrots.<id>` if real art exists, otherwise a placeholder.
+- `shared/Remotes`, `shared/Format`.
+- `server/Services/`: `DataService` (save + session lock), `EconomyService` (cash), `SyncService` (state to client), `MapService` (world), `PlotService` (gardens), `ShopService` (stock/restock/buy), `GardenService` (plant → grow → pop → earn → collect/sell).
+- `client/Controllers/`: `State`, `HudController`, `ShopController`, `PlantController` (hotbar + planting), `GrowthController` (sprout visuals), `EffectsController` (pops, cash popups, toasts). `client/UI/Kit` = shared UI helpers.
+- New system = new Service/Controller file + one line in `Main.server.luau` / `Main.client.luau`.
+
 ## Build milestones
 | # | Milestone | Done when |
 |---|---|---|
