@@ -1,0 +1,7 @@
+*.rbxl
+*.rbxlx
+*.lock
+sourcemap.json
+
+# local-only stuff that never goes to GitHub
+_shelf/

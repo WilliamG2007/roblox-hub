@@ -1,0 +1,1 @@
+print("[GameTemplate] server running")
