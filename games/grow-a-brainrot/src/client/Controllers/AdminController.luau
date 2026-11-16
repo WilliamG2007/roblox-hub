@@ -54,23 +54,14 @@ function AdminController.start()
 		BackgroundTransparency = 1,
 		Parent = gui,
 	}))
-	local toggle = Kit.button({ Size = UDim2.fromScale(1, 1), Text = "ADMIN", TextSize = 22, BackgroundColor3 = Color3.fromRGB(220, 60, 60), Parent = holder })
+	local toggle = Kit.button({ Size = UDim2.fromScale(1, 1), Text = "ADMIN", TextSize = 22, BackgroundColor3 = Kit.Theme.Red, Parent = holder })
 
-	local panel = Kit.autoScale(Kit.new("Frame", {
-		AnchorPoint = Vector2.new(0, 1),
-		Position = UDim2.new(0, 16, 1, -72),
-		Size = UDim2.fromOffset(460, 600),
-		BackgroundColor3 = Kit.Theme.Panel,
-		Visible = false,
-		Parent = gui,
-	}))
-	Kit.corner(panel, 16)
-	Kit.stroke(panel, Color3.fromRGB(220, 60, 60), 3)
-	Kit.label({ Position = UDim2.fromOffset(0, 8), Size = UDim2.new(1, 0, 0, 32), Text = "ADMIN PANEL", TextSize = 30, TextColor3 = Color3.fromRGB(255, 120, 120), Parent = panel })
+	local window = Kit.window(gui, { title = "ADMIN PANEL", accent = Kit.Theme.Red, size = Vector2.new(460, 620), anchor = Vector2.new(0, 1), position = UDim2.new(0, 16, 1, -76) })
+	local panel = window.frame
 
 	-- command box
 	local box = Kit.new("TextBox", {
-		Position = UDim2.fromOffset(12, 48),
+		Position = UDim2.fromOffset(12, 66),
 		Size = UDim2.new(1, -110, 0, 40),
 		BackgroundColor3 = Color3.fromRGB(20, 18, 40),
 		Text = "",
@@ -85,7 +76,7 @@ function AdminController.start()
 	})
 	Kit.corner(box, 8)
 	Kit.new("UIPadding", { PaddingLeft = UDim.new(0, 8), Parent = box })
-	local run = Kit.button({ AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -12, 0, 48), Size = UDim2.fromOffset(86, 40), Text = "RUN", TextSize = 20, BackgroundColor3 = Kit.Theme.Good, Parent = panel })
+	local run = Kit.button({ AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -12, 0, 66), Size = UDim2.fromOffset(86, 40), Text = "RUN", TextSize = 20, BackgroundColor3 = Kit.Theme.Good, Parent = panel })
 	local function submit()
 		if box.Text ~= "" then
 			remote:FireServer(box.Text)
@@ -99,7 +90,7 @@ function AdminController.start()
 	end)
 
 	-- quick actions
-	local grid = Kit.new("ScrollingFrame", { Position = UDim2.fromOffset(12, 98), Size = UDim2.new(1, -24, 0, 300), BackgroundTransparency = 1, BorderSizePixel = 0, ScrollBarThickness = 5, AutomaticCanvasSize = Enum.AutomaticSize.Y, CanvasSize = UDim2.new(), Parent = panel })
+	local grid = Kit.new("ScrollingFrame", { Position = UDim2.fromOffset(12, 116), Size = UDim2.new(1, -24, 0, 292), BackgroundTransparency = 1, BorderSizePixel = 0, ScrollBarThickness = 5, AutomaticCanvasSize = Enum.AutomaticSize.Y, CanvasSize = UDim2.new(), Parent = panel })
 	Kit.new("UIGridLayout", { CellSize = UDim2.new(0.5, -4, 0, 32), CellPadding = UDim2.fromOffset(8, 5), SortOrder = Enum.SortOrder.LayoutOrder, Parent = grid })
 	for i, quick in QUICK do
 		local button = Kit.button({ Text = quick[1], TextSize = 16, BackgroundColor3 = Color3.fromRGB(70, 60, 130), LayoutOrder = i, Parent = grid })
@@ -110,8 +101,8 @@ function AdminController.start()
 
 	-- command reference (click one to put it in the box)
 	local help = Kit.new("ScrollingFrame", {
-		Position = UDim2.fromOffset(12, 400),
-		Size = UDim2.new(1, -24, 1, -410),
+		Position = UDim2.fromOffset(12, 416),
+		Size = UDim2.new(1, -24, 1, -426),
 		BackgroundColor3 = Color3.fromRGB(20, 18, 40),
 		BorderSizePixel = 0,
 		ScrollBarThickness = 5,
@@ -140,12 +131,10 @@ function AdminController.start()
 		end)
 	end
 
-	toggle.Activated:Connect(function()
-		panel.Visible = not panel.Visible
-	end)
+	toggle.Activated:Connect(window.toggle)
 	UserInputService.InputBegan:Connect(function(input, processed)
 		if not processed and input.KeyCode == Enum.KeyCode.F2 and gui.Enabled then
-			panel.Visible = not panel.Visible
+			window.toggle()
 		end
 	end)
 

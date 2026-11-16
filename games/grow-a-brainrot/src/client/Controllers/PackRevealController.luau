@@ -21,6 +21,7 @@ local GameConfig = require(Shared.Config.Game)
 local GamePasses = require(Shared.Config.GamePasses)
 local Format = require(Shared.Format)
 local Kit = require(script.Parent.Parent.UI.Kit)
+local Sfx = require(script.Parent.Parent.UI.Sfx)
 
 local MarketplaceService = game:GetService("MarketplaceService")
 local Players = game:GetService("Players")
@@ -92,8 +93,9 @@ end
 local function card(def, parent, position, size)
 	local rarity = Rarities.byName[def.rarity]
 	local frame = Kit.new("Frame", { Position = position, Size = size, BackgroundColor3 = rarity.color:Lerp(Color3.new(0, 0, 0), 0.55), Parent = parent })
-	Kit.corner(frame, 12)
+	Kit.corner(frame, 14)
 	Kit.stroke(frame, rarity.color, 4)
+	Kit.gloss(frame, 0.35)
 	local body = Kit.new("Frame", { AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.new(0.5, 0, 0, 12), Size = UDim2.fromScale(0.55, 0.45), BackgroundColor3 = def.colors[1], Parent = frame })
 	Kit.corner(body, 8)
 	Kit.stroke(body, def.colors[2], 4)
@@ -151,7 +153,7 @@ local function mutationSlot(result)
 		local row = math.floor(-y / 80)
 		if row ~= lastRow then
 			lastRow = row
-			Kit.sound(0.12, 2.2)
+			Sfx.play("reveal_tick", { pitch = 1.3 })
 		end
 		if t >= 1 then
 			break
@@ -162,10 +164,11 @@ local function mutationSlot(result)
 
 	if result.mutation ~= "Normal" then
 		screenFlash(mutation.color)
-		Kit.sound(0.7, 0.9 + mutation.order * 0.1)
+		Sfx.play("mutation_hit", { pitch = 0.9 + mutation.order * 0.04 })
 		bigText(string.upper(mutation.name) .. "  x" .. mutation.mult .. "!", mutation.color, 510, 70)
 	else
 		bigText("Normal", Color3.fromRGB(200, 200, 200), 510, 40)
+		Sfx.play("ui_select")
 	end
 end
 
@@ -197,7 +200,7 @@ local function playSingle(pack, result)
 		local under = math.floor((center - x) / STEP)
 		if under ~= lastCard then
 			lastCard = under
-			Kit.sound(0.15, 1.8 + rng:NextNumber() * 0.2)
+			Sfx.play("reveal_tick")
 		end
 		if t >= 1 then
 			break
@@ -209,7 +212,7 @@ local function playSingle(pack, result)
 	if BIG[def.rarity] then
 		screenFlash(rarity.color)
 	end
-	Kit.sound(0.6, 1 + rarity.order * 0.12)
+	Sfx.play(if BIG[def.rarity] then "reveal_rare" else "reveal_land", { pitch = 0.95 + rarity.order * 0.03 })
 	bigText(string.upper(def.rarity), rarity.color, 310, 44)
 	bigText(def.name .. (if result.pity then "  (PITY!)" else ""), Color3.new(1, 1, 1), 350, 44)
 	wait(0.6)
@@ -235,8 +238,9 @@ local function playMulti(pack, results)
 		local c = (i - 1) % cols
 		local r = math.floor((i - 1) / cols)
 		local back = Kit.new("Frame", { Position = UDim2.fromOffset(c * (w + gap), r * (h + gap)), Size = UDim2.fromOffset(w, h), BackgroundColor3 = pack.color, Parent = grid })
-		Kit.corner(back, 12)
-		Kit.stroke(back, Color3.new(0, 0, 0), 4)
+		Kit.corner(back, 14)
+		Kit.stroke(back, Kit.Theme.Outline, 4)
+		Kit.gloss(back, 0.4)
 		Kit.label({ Size = UDim2.fromScale(1, 1), Text = "?", TextSize = 70, Parent = back })
 		slots[i] = back
 	end
@@ -252,7 +256,7 @@ local function playMulti(pack, results)
 		local revealed = card(def, grid, pos, UDim2.fromOffset(w, h))
 		slots[i] = revealed
 		Kit.bounce(revealed)
-		Kit.sound(0.35, 1 + rarity.order * 0.12)
+		Sfx.play(if BIG[def.rarity] then "reveal_rare" else "reveal_land", { volume = 0.7, pitch = 0.95 + rarity.order * 0.04 })
 		if BIG[def.rarity] then
 			screenFlash(rarity.color)
 		end
@@ -269,7 +273,7 @@ local function playMulti(pack, results)
 		if result.mutation ~= "Normal" then
 			local tag = Kit.label({ AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.08), Size = UDim2.new(1.1, 0, 0, 34), Text = string.upper(mutation.name) .. " x" .. mutation.mult, TextScaled = true, TextColor3 = mutation.color, TextStrokeTransparency = 0, Rotation = -8, ZIndex = 4, Parent = slots[i] })
 			Kit.bounce(tag)
-			Kit.sound(0.6, 0.9 + mutation.order * 0.1)
+			Sfx.play("mutation_hit", { pitch = 0.9 + mutation.order * 0.04 })
 			if mutation.order >= Mutations.byId.Rainbow.order then
 				screenFlash(mutation.color)
 			end

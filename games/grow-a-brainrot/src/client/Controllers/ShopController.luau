@@ -13,12 +13,13 @@ local Rarities = require(Shared.Config.Rarities)
 local Mutations = require(Shared.Config.Mutations)
 local Packs = require(Shared.Config.Packs)
 local Kit = require(script.Parent.Parent.UI.Kit)
+local Sfx = require(script.Parent.Parent.UI.Sfx)
 
 local ShopController = {}
 
 local State
 local buyRemote
-local panel, list, timerLabel, luckLabel
+local window, list, timerLabel, luckLabel
 local oddsPanel, oddsList, oddsTitle
 local cards = {} -- [packId] = widgets
 local renderedStockId = nil
@@ -107,43 +108,64 @@ end
 
 local function buildCard(item)
 	local pack = Packs.byId[item.id]
-	local frame = Kit.new("Frame", { Size = UDim2.new(1, -10, 0, 104), BackgroundColor3 = Kit.Theme.PanelLight, LayoutOrder = pack.order, Parent = list })
-	Kit.corner(frame, 14)
-	Kit.stroke(frame, pack.color, 3)
-	local icon = Kit.new("Frame", { Position = UDim2.fromOffset(10, 12), Size = UDim2.fromOffset(64, 80), BackgroundColor3 = pack.color, Parent = frame })
-	Kit.corner(icon, 10)
-	Kit.stroke(icon, Color3.new(0, 0, 0), 3)
-	Kit.label({ Size = UDim2.fromScale(1, 1), Text = "?", TextSize = 48, Parent = icon })
+	local frame = Kit.new("Frame", { Size = UDim2.new(1, -12, 0, 112), BackgroundColor3 = Kit.Theme.PanelLight, LayoutOrder = pack.order, Parent = list })
+	Kit.corner(frame, 16)
+	Kit.stroke(frame, Kit.Theme.Outline, 3)
+	Kit.gloss(frame, 0.2)
+	-- colored edge in the pack's color
+	local edge = Kit.new("Frame", { Size = UDim2.new(0, 10, 1, 0), BackgroundColor3 = pack.color, BorderSizePixel = 0, Parent = frame })
+	Kit.corner(edge, 16)
 
-	Kit.label({ Position = UDim2.fromOffset(84, 8), Size = UDim2.new(1, -330, 0, 28), Text = pack.name, TextSize = 26, TextColor3 = pack.color, TextXAlignment = Enum.TextXAlignment.Left, TextTruncate = Enum.TextTruncate.AtEnd, Parent = frame })
+	-- glossy pack "box" icon with a wobbling ?
+	local icon = Kit.new("Frame", { Position = UDim2.fromOffset(20, 12), Size = UDim2.fromOffset(72, 88), BackgroundColor3 = pack.color, Parent = frame })
+	Kit.corner(icon, 14)
+	Kit.stroke(icon, Kit.Theme.Outline, 3)
+	Kit.gloss(icon, 0.4)
+	Kit.new("Frame", { Position = UDim2.new(0, 6, 0, 6), Size = UDim2.new(1, -12, 0, 10), BackgroundColor3 = Color3.new(1, 1, 1), BackgroundTransparency = 0.55, Parent = icon })
+	local question = Kit.label({ Size = UDim2.fromScale(1, 1), Text = "?", TextSize = 54, Parent = icon })
+
+	Kit.label({ Position = UDim2.fromOffset(104, 8), Size = UDim2.new(1, -350, 0, 30), Text = pack.name, TextSize = 28, TextColor3 = pack.color, TextXAlignment = Enum.TextXAlignment.Left, TextTruncate = Enum.TextTruncate.AtEnd, Parent = frame })
 	local shardPack = pack.currency == "shards"
-	local price = Kit.label({ Position = UDim2.fromOffset(84, 36), Size = UDim2.new(1, -330, 0, 24), Text = if shardPack then pack.price .. " Moon Shards" else Format.cash(pack.price), TextSize = 22, TextColor3 = if shardPack then Color3.fromRGB(170, 200, 255) else Kit.Theme.Cash, TextXAlignment = Enum.TextXAlignment.Left, Parent = frame })
-	local stock = Kit.label({ Position = UDim2.fromOffset(84, 60), Size = UDim2.new(1, -330, 0, 18), Text = "", Font = Kit.Theme.Body, TextSize = 14, TextColor3 = Color3.fromRGB(210, 210, 230), TextXAlignment = Enum.TextXAlignment.Left, Parent = frame })
+	local price = Kit.label({ Position = UDim2.fromOffset(104, 40), Size = UDim2.new(1, -350, 0, 26), Text = if shardPack then pack.price .. " Moon Shards" else Format.cash(pack.price), TextSize = 24, TextColor3 = if shardPack then Kit.Theme.Shards else Kit.Theme.Cash, TextXAlignment = Enum.TextXAlignment.Left, Parent = frame })
+	local stock = Kit.label({ Position = UDim2.fromOffset(104, 68), Size = UDim2.new(1, -350, 0, 16), Text = "", Font = Kit.Theme.Body, TextSize = 13, TextColor3 = Color3.fromRGB(215, 215, 235), TextXAlignment = Enum.TextXAlignment.Left, Outline = false, Parent = frame })
 
 	-- pity bar
-	local pityBack = Kit.new("Frame", { Position = UDim2.fromOffset(84, 82), Size = UDim2.new(1, -330, 0, 12), BackgroundColor3 = Color3.fromRGB(20, 18, 40), Parent = frame })
+	local pityBack = Kit.new("Frame", { Position = UDim2.fromOffset(104, 88), Size = UDim2.new(1, -350, 0, 12), BackgroundColor3 = Kit.Theme.PanelDark, Parent = frame })
 	Kit.corner(pityBack, 6)
+	Kit.stroke(pityBack, Kit.Theme.Outline, 2)
 	local pityFill = Kit.new("Frame", { Size = UDim2.fromScale(0, 1), BackgroundColor3 = Rarities.byName[pack.pity.rarity].color, Parent = pityBack })
 	Kit.corner(pityFill, 6)
+	Kit.gloss(pityFill, 0.3)
 
-	local one = Kit.button({ AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -128, 0, 10), Size = UDim2.fromOffset(110, 50), Text = "OPEN", TextSize = 24, Parent = frame })
-	local ten = Kit.button({ AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -10, 0, 10), Size = UDim2.fromOffset(110, 50), Text = "x10", TextSize = 24, Parent = frame })
-	local odds = Kit.button({ AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -10, 1, -10), Size = UDim2.fromOffset(228, 30), Text = "Odds & Pity", TextSize = 18, BackgroundColor3 = Color3.fromRGB(90, 120, 255), Parent = frame })
+	local one = Kit.button({ AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -134, 0, 12), Size = UDim2.fromOffset(114, 52), Text = "OPEN", TextSize = 26, Parent = frame }, { sound = false })
+	local ten = Kit.button({ AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -12, 0, 12), Size = UDim2.fromOffset(114, 52), Text = "x10", TextSize = 26, Parent = frame }, { sound = false })
+	local odds = Kit.button({ AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -12, 1, -10), Size = UDim2.fromOffset(236, 32), Text = "Odds & Pity", TextSize = 18, BackgroundColor3 = Kit.Theme.Blue, Parent = frame })
+	local card = { frame = frame, price = price, stock = stock, pityFill = pityFill, one = one, ten = ten, pack = pack, question = question }
+	card.affordable = function()
+		return true
+	end
+	local function buy(count)
+		if card.affordable(count) then
+			buyRemote:FireServer(item.id, count)
+		else
+			Sfx.play("ui_error")
+		end
+	end
 	one.Activated:Connect(function()
-		buyRemote:FireServer(item.id, 1)
+		buy(1)
 	end)
 	ten.Activated:Connect(function()
-		buyRemote:FireServer(item.id, 10)
+		buy(10)
 	end)
 	odds.Activated:Connect(function()
 		showOdds(item.id)
 	end)
-	cards[item.id] = { frame = frame, price = price, stock = stock, pityFill = pityFill, one = one, ten = ten, pack = pack }
+	cards[item.id] = card
 end
 
 local function refresh()
 	local data = State.data
-	if not data or not panel.Visible then
+	if not data or not window.isOpen() then
 		return
 	end
 	local shop = data.shop
@@ -163,9 +185,14 @@ local function refresh()
 			card.pityFill.Size = UDim2.fromScale(math.clamp(pity / pack.pity.count, 0, 1), 1)
 			local tenCount = math.min(10, item.left)
 			local wallet = if pack.currency == "shards" then data.shards or 0 else data.cash
-			card.one.BackgroundColor3 = if item.left <= 0 then Color3.fromRGB(90, 90, 100) elseif wallet >= pack.price then Kit.Theme.Good else Kit.Theme.Bad
+			local left = item.left
+			card.affordable = function(count)
+				local n = math.min(count, left)
+				return n >= 1 and wallet >= pack.price * n
+			end
+			card.one.BackgroundColor3 = if left <= 0 then Kit.Theme.Disabled elseif wallet >= pack.price then Kit.Theme.Good else Kit.Theme.Bad
 			card.ten.Text = if tenCount > 1 then "x" .. tenCount else "x10"
-			card.ten.BackgroundColor3 = if tenCount <= 1 then Color3.fromRGB(90, 90, 100) elseif wallet >= pack.price * tenCount then Kit.Theme.Good else Kit.Theme.Bad
+			card.ten.BackgroundColor3 = if tenCount <= 1 then Kit.Theme.Disabled elseif wallet >= pack.price * tenCount then Kit.Theme.Good else Kit.Theme.Bad
 		end
 	end
 end
@@ -173,17 +200,16 @@ end
 --------------------------------------------------------------------------------
 
 function ShopController.open()
-	panel.Visible = true
+	window.open()
 	refresh()
 end
 
 function ShopController.close()
-	panel.Visible = false
-	oddsPanel.Visible = false
+	window.close()
 end
 
 function ShopController.toggle()
-	if panel.Visible then
+	if window.isOpen() then
 		ShopController.close()
 	else
 		ShopController.open()
@@ -195,39 +221,34 @@ function ShopController.start(controllers)
 	buyRemote = Remotes.get("BuyPack")
 	local gui = Kit.screen("Shop", 5)
 
-	panel = Kit.autoScale(Kit.new("Frame", {
-		AnchorPoint = Vector2.new(0.5, 0.5),
-		Position = UDim2.fromScale(0.5, 0.53),
-		Size = UDim2.fromOffset(640, 620),
-		BackgroundColor3 = Kit.Theme.Panel,
-		Visible = false,
-		Parent = gui,
-	}))
-	Kit.corner(panel, 18)
-	Kit.stroke(panel, Color3.new(0, 0, 0), 4)
-	Kit.label({ Position = UDim2.fromOffset(0, 8), Size = UDim2.new(1, 0, 0, 42), Text = "PACK SHOP", TextSize = 40, TextColor3 = Kit.Theme.Accent, Parent = panel })
-	timerLabel = Kit.label({ Position = UDim2.fromOffset(0, 50), Size = UDim2.new(1, 0, 0, 24), Text = "", TextSize = 20, Parent = panel })
-	luckLabel = Kit.label({ Position = UDim2.fromOffset(0, 74), Size = UDim2.new(1, 0, 0, 22), Text = "", TextSize = 20, TextColor3 = Kit.Theme.Accent, Parent = panel })
-	local close = Kit.button({ AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -10, 0, 10), Size = UDim2.fromOffset(44, 44), Text = "X", TextSize = 26, BackgroundColor3 = Kit.Theme.Bad, Parent = panel })
-	close.Activated:Connect(ShopController.close)
+	window = Kit.window(gui, { title = "PACK SHOP", accent = Kit.Theme.Pink, size = Vector2.new(660, 640) })
+	window.onClose = function()
+		oddsPanel.Visible = false
+		oddsPackId = nil
+	end
+	local panel = window.frame
+	timerLabel = Kit.label({ AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -70, 0, 14), Size = UDim2.fromOffset(240, 28), Text = "", TextSize = 20, TextXAlignment = Enum.TextXAlignment.Right, Parent = window.header })
+	luckLabel = Kit.label({ Position = UDim2.fromOffset(0, 62), Size = UDim2.new(1, 0, 0, 24), Text = "", TextSize = 20, TextColor3 = Kit.Theme.Accent, Parent = panel })
 
 	list = Kit.new("ScrollingFrame", {
-		Position = UDim2.fromOffset(12, 100),
-		Size = UDim2.new(1, -24, 1, -112),
+		Position = UDim2.fromOffset(12, 90),
+		Size = UDim2.new(1, -24, 1, -100),
 		BackgroundTransparency = 1,
 		BorderSizePixel = 0,
-		ScrollBarThickness = 6,
+		ScrollBarThickness = 8,
+		ScrollBarImageColor3 = Kit.Theme.Pink,
 		AutomaticCanvasSize = Enum.AutomaticSize.Y,
 		CanvasSize = UDim2.new(),
 		Parent = panel,
 	})
-	Kit.new("UIListLayout", { Padding = UDim.new(0, 8), SortOrder = Enum.SortOrder.LayoutOrder, HorizontalAlignment = Enum.HorizontalAlignment.Center, Parent = list })
+	Kit.new("UIListLayout", { Padding = UDim.new(0, 10), SortOrder = Enum.SortOrder.LayoutOrder, HorizontalAlignment = Enum.HorizontalAlignment.Center, Parent = list })
+	Kit.new("UIPadding", { PaddingTop = UDim.new(0, 4), PaddingBottom = UDim.new(0, 8), Parent = list })
 
-	-- odds overlay (covers the pack list)
-	oddsPanel = Kit.new("Frame", { Size = UDim2.fromScale(1, 1), BackgroundColor3 = Kit.Theme.Panel, Visible = false, ZIndex = 5, Parent = panel })
-	Kit.corner(oddsPanel, 18)
-	oddsTitle = Kit.label({ Position = UDim2.fromOffset(0, 10), Size = UDim2.new(1, 0, 0, 40), Text = "", TextSize = 34, TextColor3 = Kit.Theme.Accent, ZIndex = 5, Parent = oddsPanel })
-	local back = Kit.button({ Position = UDim2.fromOffset(10, 10), Size = UDim2.fromOffset(90, 40), Text = "Back", TextSize = 22, BackgroundColor3 = Color3.fromRGB(90, 120, 255), ZIndex = 6, Parent = oddsPanel })
+	-- odds overlay (covers the pack list, below the header)
+	oddsPanel = Kit.new("Frame", { Position = UDim2.fromOffset(0, 56), Size = UDim2.new(1, 0, 1, -56), BackgroundColor3 = Kit.Theme.Panel, Visible = false, ZIndex = 5, Parent = panel })
+	Kit.gloss(oddsPanel, 0.3)
+	oddsTitle = Kit.label({ Position = UDim2.fromOffset(110, 10), Size = UDim2.new(1, -130, 0, 40), Text = "", TextSize = 32, TextColor3 = Kit.Theme.Accent, TextXAlignment = Enum.TextXAlignment.Left, ZIndex = 5, Parent = oddsPanel })
+	local back = Kit.button({ Position = UDim2.fromOffset(12, 10), Size = UDim2.fromOffset(88, 40), Text = "Back", TextSize = 22, BackgroundColor3 = Kit.Theme.Blue, ZIndex = 6, Parent = oddsPanel })
 	back.Activated:Connect(function()
 		oddsPanel.Visible = false
 		oddsPackId = nil
@@ -237,7 +258,7 @@ function ShopController.start(controllers)
 		Size = UDim2.new(1, -32, 1, -70),
 		BackgroundTransparency = 1,
 		BorderSizePixel = 0,
-		ScrollBarThickness = 6,
+		ScrollBarThickness = 8,
 		AutomaticCanvasSize = Enum.AutomaticSize.Y,
 		CanvasSize = UDim2.new(),
 		ZIndex = 5,
@@ -250,14 +271,19 @@ function ShopController.start(controllers)
 
 	RunService.Heartbeat:Connect(function()
 		local data = State.data
-		if not panel.Visible or not data then
+		if not window.isOpen() or not data then
 			return
 		end
-		timerLabel.Text = "Restocks in " .. Format.time(data.shop.endsAt - workspace:GetServerTimeNow())
+		timerLabel.Text = "restock " .. Format.time(data.shop.endsAt - workspace:GetServerTimeNow())
 		local luck, mutationLuck = serverLuck()
 		luckLabel.Text = if luck > 1 or mutationLuck > 1
 			then string.format("%s ACTIVE: x%s luck, x%s mutations!", ReplicatedStorage:GetAttribute("LuckEventName") or "LUCK", tostring(luck), tostring(mutationLuck))
 			else ""
+		-- gently wobble the ? on every pack
+		local t = os.clock()
+		for _, card in cards do
+			card.question.Rotation = math.sin(t * 2 + card.pack.order) * 8
+		end
 	end)
 
 	Remotes.get("Fx").OnClientEvent:Connect(function(kind)

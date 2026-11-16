@@ -99,7 +99,7 @@ local function rebuild()
 				BackgroundColor3 = if mutation.id ~= "Normal" then mutation.color else def.colors[1],
 				Text = "",
 				Parent = bar,
-			})
+			}, { sound = "ui_select" })
 			Kit.label({ Name = "Name", Position = UDim2.fromOffset(4, 4), Size = UDim2.new(1, -8, 0, 40), Text = def.name, TextScaled = true, TextWrapped = true, TextStrokeTransparency = 0, Parent = button })
 			if mutation.id ~= "Normal" then
 				Kit.label({ Name = "Mutation", Position = UDim2.fromOffset(4, 44), Size = UDim2.new(1, -8, 0, 20), Text = string.upper(mutation.name), TextScaled = true, TextColor3 = Color3.new(1, 1, 1), TextStrokeTransparency = 0, Parent = button })

@@ -19,7 +19,7 @@ local InventoryController = {}
 local State
 local pending
 local remote
-local panel, grid, detail, filterButtons, autoButtons
+local window, panel, grid, detail, filterButtons, autoButtons
 local filter = "All"
 local selectedKey = nil
 
@@ -52,7 +52,7 @@ end
 
 local function renderDetail()
 	for _, child in detail:GetChildren() do
-		if not child:IsA("UICorner") and not child:IsA("UIStroke") then
+		if not child:IsA("UICorner") and not child:IsA("UIStroke") and not child:IsA("UIGradient") then
 			child:Destroy()
 		end
 	end
@@ -81,7 +81,7 @@ local function renderDetail()
 end
 
 local function render()
-	if not panel.Visible then
+	if not window.isOpen() then
 		return
 	end
 	for _, child in grid:GetChildren() do
@@ -117,8 +117,7 @@ local function render()
 end
 
 function InventoryController.toggle()
-	panel.Visible = not panel.Visible
-	render()
+	window.toggle()
 end
 
 function InventoryController.start(controllers)
@@ -127,32 +126,14 @@ function InventoryController.start(controllers)
 	remote = Remotes.get("Inventory")
 	local gui = Kit.screen("Inventory", 6)
 
-	local holder = Kit.autoScale(Kit.new("Frame", {
-		AnchorPoint = Vector2.new(0, 0.5),
-		Position = UDim2.new(0, 16, 0.5, 70),
-		Size = UDim2.fromOffset(130, 70),
-		BackgroundTransparency = 1,
-		Parent = gui,
-	}))
-	local bagButton = Kit.button({ Size = UDim2.fromScale(1, 1), Text = "BAG", TextSize = 32, BackgroundColor3 = Color3.fromRGB(110, 160, 255), Parent = holder })
-	bagButton.Activated:Connect(InventoryController.toggle)
-
-	panel = Kit.autoScale(Kit.new("Frame", {
-		AnchorPoint = Vector2.new(0.5, 0.5),
-		Position = UDim2.fromScale(0.5, 0.53),
-		Size = UDim2.fromOffset(680, 620),
-		BackgroundColor3 = Kit.Theme.Panel,
-		Visible = false,
-		Parent = gui,
-	}))
-	Kit.corner(panel, 18)
-	Kit.stroke(panel, Color3.new(0, 0, 0), 4)
-	Kit.label({ Position = UDim2.fromOffset(0, 8), Size = UDim2.new(1, 0, 0, 40), Text = "BACKPACK", TextSize = 38, TextColor3 = Color3.fromRGB(150, 190, 255), Parent = panel })
-	local close = Kit.button({ AnchorPoint = Vector2.new(1, 0), Position = UDim2.new(1, -10, 0, 10), Size = UDim2.fromOffset(44, 44), Text = "X", TextSize = 26, BackgroundColor3 = Kit.Theme.Bad, Parent = panel })
-	close.Activated:Connect(InventoryController.toggle)
+	window = Kit.window(gui, { title = "BACKPACK", accent = Kit.Theme.Blue, size = Vector2.new(680, 620) })
+	window.onOpen = function()
+		task.defer(render)
+	end
+	panel = window.frame
 
 	-- rarity filter tabs
-	local tabs = Kit.new("Frame", { Position = UDim2.fromOffset(12, 54), Size = UDim2.new(1, -24, 0, 30), BackgroundTransparency = 1, Parent = panel })
+	local tabs = Kit.new("Frame", { Position = UDim2.fromOffset(12, 66), Size = UDim2.new(1, -24, 0, 30), BackgroundTransparency = 1, Parent = panel })
 	Kit.new("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 4), SortOrder = Enum.SortOrder.LayoutOrder, Parent = tabs })
 	filterButtons = {}
 	local names = { "All" }
@@ -169,8 +150,8 @@ function InventoryController.start(controllers)
 	end
 
 	grid = Kit.new("ScrollingFrame", {
-		Position = UDim2.fromOffset(12, 92),
-		Size = UDim2.new(1, -24, 0, 300),
+		Position = UDim2.fromOffset(12, 104),
+		Size = UDim2.new(1, -24, 0, 286),
 		BackgroundTransparency = 1,
 		BorderSizePixel = 0,
 		ScrollBarThickness = 6,
@@ -181,12 +162,14 @@ function InventoryController.start(controllers)
 	Kit.new("UIGridLayout", { CellSize = UDim2.fromOffset(96, 96), CellPadding = UDim2.fromOffset(8, 8), SortOrder = Enum.SortOrder.LayoutOrder, Parent = grid })
 	Kit.new("UIPadding", { PaddingTop = UDim.new(0, 4), PaddingLeft = UDim.new(0, 4), Parent = grid })
 
-	detail = Kit.new("Frame", { Position = UDim2.fromOffset(12, 400), Size = UDim2.new(1, -24, 0, 102), BackgroundColor3 = Kit.Theme.PanelLight, Parent = panel })
+	detail = Kit.new("Frame", { Position = UDim2.fromOffset(12, 398), Size = UDim2.new(1, -24, 0, 102), BackgroundColor3 = Kit.Theme.PanelLight, Parent = panel })
 	Kit.corner(detail, 12)
+	Kit.stroke(detail, Kit.Theme.Outline, 3)
+	Kit.gloss(detail, 0.2)
 
 	-- bulk sell + auto-sell
-	Kit.label({ Position = UDim2.fromOffset(12, 508), Size = UDim2.new(1, -24, 0, 20), Text = "Sell every NORMAL seed of a rarity  /  auto-sell Normal pulls:", Font = Kit.Theme.Body, TextSize = 14, TextXAlignment = Enum.TextXAlignment.Left, Parent = panel })
-	local bulk = Kit.new("Frame", { Position = UDim2.fromOffset(12, 532), Size = UDim2.new(1, -24, 0, 34), BackgroundTransparency = 1, Parent = panel })
+	Kit.label({ Position = UDim2.fromOffset(12, 506), Size = UDim2.new(1, -24, 0, 20), Text = "Sell every NORMAL seed of a rarity  /  auto-sell Normal pulls:", Font = Kit.Theme.Body, TextSize = 14, TextXAlignment = Enum.TextXAlignment.Left, Parent = panel })
+	local bulk = Kit.new("Frame", { Position = UDim2.fromOffset(12, 530), Size = UDim2.new(1, -24, 0, 34), BackgroundTransparency = 1, Parent = panel })
 	Kit.new("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 6), Parent = bulk })
 	local auto = Kit.new("Frame", { Position = UDim2.fromOffset(12, 572), Size = UDim2.new(1, -24, 0, 34), BackgroundTransparency = 1, Parent = panel })
 	Kit.new("UIListLayout", { FillDirection = Enum.FillDirection.Horizontal, Padding = UDim.new(0, 6), Parent = auto })
