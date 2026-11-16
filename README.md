@@ -43,4 +43,4 @@ For building the 3D world together live, use **Team Create** in Studio (File →
 
 | Game | Folder | Status |
 |---|---|---|
-| Grow a Brainrot | `games/grow-a-brainrot` | Researching |
+| Grow a Brainrot (working title) | `games/grow-a-brainrot` | Designed, building M1 next |
