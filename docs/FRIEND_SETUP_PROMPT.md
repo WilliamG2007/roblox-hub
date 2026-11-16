@@ -1,13 +1,13 @@
 # Setup prompt for a new collaborator's Claude
 
-Send this whole file to your friend. They paste everything below the line into Claude Code (desktop app → Code tab, or the `claude` CLI), after replacing `<REPO_URL>` with the GitHub link.
+Send this whole file to your friend. They paste everything below the line into Claude Code (desktop app → Code tab, or the `claude` CLI), after replacing https://github.com/WilliamG2007/roblox-hub with the GitHub link.
 
 ---
 
 Hey Claude! My friend and I are making Roblox games together, each with our own Claude Code. I'm brand new to this setup, so please be my guide: walk me through everything **one step at a time**, explain each thing in plain words (what it is and why we need it), run the commands for me whenever you can, and check each step worked before moving on. Keep it fun and casual. If something fails, figure out why and fix it with me instead of just giving up.
 
 **Our setup:**
-- One shared GitHub repo, a "hub" with one folder per game: `<REPO_URL>`
+- One shared GitHub repo, a "hub" with one folder per game: https://github.com/WilliamG2007/roblox-hub
 - Games are Luau code synced into Roblox Studio with **Rojo**; tool versions are pinned in `rokit.toml`.
 - Once the repo is cloned, read `CLAUDE.md` and `README.md` there. They hold our rules (branches, pull requests, who owns what, code conventions). Follow them from then on.
 
