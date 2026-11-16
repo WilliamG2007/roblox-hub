@@ -14,6 +14,7 @@ local Packs = require(Shared.Config.Packs)
 local Brainrots = require(Shared.Config.Brainrots)
 local Mutations = require(Shared.Config.Mutations)
 local AdminCommands = require(Shared.AdminCommands)
+local GamePasses = require(Shared.Config.GamePasses)
 local Seeds = require(Shared.Seeds)
 local Format = require(Shared.Format)
 local Remotes = require(Shared.Remotes)
@@ -179,6 +180,47 @@ function handlers.wander(_, args)
 	local mutation = findIn(Mutations.list, args[2] or "Normal", { "id", "name" })
 	assert(mutation, "unknown mutation '" .. tostring(args[2]) .. "'")
 	services.WanderService.spawn(def.id, mutation.id, free)
+end
+
+function handlers.night(_, args)
+	services.DayNightService.startNight(args[1] ~= nil and string.lower(args[1]) == "boss")
+end
+
+function handlers.day()
+	services.DayNightService.startDay()
+end
+
+function handlers.spawn(_, args)
+	for _ = 1, math.clamp(math.floor(num(args[1], 3)), 1, 20) do
+		services.MonsterService.spawn("Grumbler")
+	end
+end
+
+function handlers.boss()
+	fx:FireAllClients("Announce", "THE 67 IS COMING!!!", Color3.fromRGB(60, 150, 255))
+	services.MonsterService.spawn("Boss")
+end
+
+function handlers.shards(admin, args)
+	local amount = math.floor(num(args[1], 100))
+	for _, player in targets(admin, args[2]) do
+		local data = services.DataService.get(player)
+		if data then
+			data.shards = math.max(0, data.shards + amount)
+			services.SyncService.mark(player)
+		end
+	end
+	reply(admin, string.format("+%d Moon Shards", amount))
+end
+
+function handlers.pass(admin, args)
+	local name = args[1] or "FastRoll"
+	assert(GamePasses[name], "unknown pass '" .. name .. "' (try FastRoll)")
+	for _, player in targets(admin, args[2]) do
+		local owned = not services.MonetizationService.owns(player, name)
+		services.MonetizationService.setOwned(player, name, owned)
+		reply(admin, string.format("%s: %s %s", player.DisplayName, name, if owned then "ON" else "OFF"))
+	end
 end
 
 function handlers.restock()

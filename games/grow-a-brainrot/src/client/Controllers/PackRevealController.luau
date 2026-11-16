@@ -17,7 +17,13 @@ local Brainrots = require(Shared.Config.Brainrots)
 local Rarities = require(Shared.Config.Rarities)
 local Mutations = require(Shared.Config.Mutations)
 local Packs = require(Shared.Config.Packs)
+local GameConfig = require(Shared.Config.Game)
+local GamePasses = require(Shared.Config.GamePasses)
+local Format = require(Shared.Format)
 local Kit = require(script.Parent.Parent.UI.Kit)
+
+local MarketplaceService = game:GetService("MarketplaceService")
+local Players = game:GetService("Players")
 
 local Seeds = require(Shared.Seeds)
 
@@ -47,11 +53,20 @@ local REEL_CARDS = 46
 local TARGET_INDEX = 40
 local BIG = { Legendary = true, Mythic = true, Secret = true }
 
-local gui, overlay, stage, flash
+local gui, overlay, stage, flash, upsell
 local queue = {}
 local playing = false
 local skip = false
 local rng = Random.new()
+local skippable = false -- spins can only be skipped with the 2x Roll Speed pass
+
+local function hasFastRoll()
+	return Players.LocalPlayer:GetAttribute("Pass_FastRoll") == true
+end
+
+local function speed()
+	return if hasFastRoll() then 0.5 else 1
+end
 
 local function wait(seconds)
 	local deadline = os.clock() + seconds
@@ -127,7 +142,7 @@ local function mutationSlot(result)
 		Kit.label({ Position = UDim2.fromOffset(0, (i - 1) * 80), Size = UDim2.new(1, 0, 0, 80), Text = if m.id == "Normal" then "Normal" else string.upper(m.name) .. "  x" .. m.mult, TextSize = 40, TextColor3 = m.color, TextStrokeTransparency = 0, Parent = strip })
 	end
 	local finalY = -(rows - 3) * 80
-	local start, duration = os.clock(), 1.8
+	local start, duration = os.clock(), GameConfig.Reveal.MutationSeconds * speed()
 	local lastRow = 0
 	while not skip do
 		local t = math.clamp((os.clock() - start) / duration, 0, 1)
@@ -173,7 +188,7 @@ local function playSingle(pack, result)
 	local center = window.Size.X.Offset / 2
 	local landing = (TARGET_INDEX - 1) * STEP + STEP / 2 + rng:NextNumber(-CARD_W * 0.38, CARD_W * 0.38)
 	local finalX = center - landing
-	local start, duration = os.clock(), 3.4
+	local start, duration = os.clock(), GameConfig.Reveal.ReelSeconds * speed()
 	local lastCard = 0
 	while not skip do
 		local t = math.clamp((os.clock() - start) / duration, 0, 1)
@@ -200,6 +215,9 @@ local function playSingle(pack, result)
 	wait(0.6)
 	skip = false -- the mutation spin always plays its own moment
 	mutationSlot(result)
+	if result.autoSold then
+		bigText("AUTO-SOLD  +" .. Format.cash(result.autoSold), Color3.fromRGB(190, 190, 190), 570, 30)
+	end
 end
 
 --------------------------------------------------------------------------------
@@ -241,7 +259,7 @@ local function playMulti(pack, results)
 		if score > bestScore then
 			best, bestScore = revealed, score
 		end
-		wait(if BIG[def.rarity] then 0.6 else 0.22)
+		wait(GameConfig.Reveal.FlipSeconds * speed() * (if BIG[def.rarity] then 2 else 1))
 	end
 
 	skip = false
@@ -256,6 +274,13 @@ local function playMulti(pack, results)
 				screenFlash(mutation.color)
 			end
 			wait(0.35)
+		end
+	end
+	for i, result in results do
+		if result.autoSold then
+			local sold = Kit.label({ AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.5), Size = UDim2.new(1, 0, 0, 30), Text = "SOLD", TextScaled = true, TextColor3 = Color3.fromRGB(220, 220, 220), TextStrokeTransparency = 0, Rotation = 12, ZIndex = 5, Parent = slots[i] })
+			sold.BackgroundTransparency = 0.4
+			sold.BackgroundColor3 = Color3.new(0, 0, 0)
 		end
 	end
 	if best then
@@ -276,8 +301,10 @@ local function playNext()
 	local job = table.remove(queue, 1)
 	local pack = Packs.byId[job.packId]
 	skip = false
+	skippable = hasFastRoll()
 	clearStage()
 	overlay.Visible = true
+	upsell.Visible = not hasFastRoll() and GamePasses.FastRoll.id ~= 0
 	if #job.results == 1 then
 		playSingle(pack, job.results[1])
 	else
@@ -287,6 +314,7 @@ local function playNext()
 	local hint = bigText("Seeds added to your hotbar!  (click to continue)", Color3.fromRGB(200, 255, 200), 600, 30)
 	hint.TextTransparency = 0.1
 	skip = false
+	skippable = true
 	wait(2.5)
 	overlay.Visible = false
 	clearStage()
@@ -306,7 +334,9 @@ function PackRevealController.start()
 		Parent = gui,
 	})
 	overlay.Activated:Connect(function()
-		skip = true
+		if skippable then
+			skip = true
+		end
 	end)
 	stage = Kit.autoScale(Kit.new("Frame", {
 		AnchorPoint = Vector2.new(0.5, 0.5),
@@ -316,9 +346,19 @@ function PackRevealController.start()
 		Parent = overlay,
 	}))
 	flash = Kit.new("Frame", { Size = UDim2.fromScale(1, 1), BackgroundTransparency = 1, BorderSizePixel = 0, ZIndex = 10, Parent = gui })
+	local upsellHolder = Kit.autoScale(Kit.new("Frame", { AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -20, 1, -20), Size = UDim2.fromOffset(300, 56), BackgroundTransparency = 1, ZIndex = 11, Parent = gui }))
+	upsell = Kit.button({ Size = UDim2.fromScale(1, 1), Text = GamePasses.FastRoll.name .. " + Skip", TextSize = 22, BackgroundColor3 = Color3.fromRGB(255, 180, 40), Visible = false, ZIndex = 11, Parent = upsellHolder })
+	upsell.Activated:Connect(function()
+		MarketplaceService:PromptGamePassPurchase(Players.LocalPlayer, GamePasses.FastRoll.id)
+	end)
+	overlay:GetPropertyChangedSignal("Visible"):Connect(function()
+		if not overlay.Visible then
+			upsell.Visible = false
+		end
+	end)
 
 	UserInputService.InputBegan:Connect(function(input)
-		if overlay.Visible and input.KeyCode == Enum.KeyCode.Space then
+		if overlay.Visible and skippable and input.KeyCode == Enum.KeyCode.Space then
 			skip = true
 		end
 	end)

@@ -10,6 +10,8 @@ Mutations.list = {
 	{ id = "Rainbow", name = "Rainbow", mult = 12, chance = 0.008, color = Color3.fromRGB(255, 120, 220) },
 	{ id = "Galaxy", name = "Galaxy", mult = 30, chance = 0.002, color = Color3.fromRGB(150, 90, 255) },
 	{ id = "SixtySeven", name = "67", mult = 67, chance = 0.00067, color = Color3.fromRGB(60, 150, 255) },
+	-- special mutations: chance 0 = never from normal rolls, only from packs/events that grant them
+	{ id = "Moonlit", name = "Moonlit", mult = 5, chance = 0, color = Color3.fromRGB(170, 200, 255), special = true },
 }
 
 -- mutated chances never add up to more than this (Normal always stays possible)

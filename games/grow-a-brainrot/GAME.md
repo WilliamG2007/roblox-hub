@@ -79,7 +79,15 @@ The most famous characters are deliberately at the top rarities: those are the "
 
 Each has a **power** stat (defense at night) and a **value** (sell price). Selling is optional: you keep them to earn, or sell them for a burst of cash.
 
-### 5. Day / night
+### Backpack (built)
+- BAG button / **B** key: every seed with rarity filters. Sell 1, sell all of a kind, or sell every Normal seed of a rarity. Seed sell value = 10s of its income.
+- **Auto-sell** toggles (Common–Epic, Normal only): those pulls still play in the reveal (marked SOLD) and turn into cash.
+
+### Roll speed + gamepass (built)
+- Reveals are slower by default (5s reel, 2.6s mutation spin) and can't be skipped.
+- **2x Roll Speed** gamepass (`Config/GamePasses.luau`, set the real ID after creating it on the Creator Dashboard): half-length reveals + click/Space to skip. Upsell button shows during reveals once the ID is set. Admin `pass FastRoll` toggles it for testing.
+
+### 5. Day / night (built in M3, first version)
 - Server-wide cycle: **6 min day, 2.5 min night**, with a big countdown and a sky that fades to purple.
 - **Night monsters:** "Grumblers" (small, slow, funny) walk toward gardens. Every 3rd night is a **67 NIGHT**, when the giant blocky **67** boss stomps across the map.
 - **Defense:** brainrots auto-attack monsters in range, based on their power. Players hit monsters with a starter tool (a giant spoon).
@@ -88,7 +96,9 @@ Each has a **power** stat (defense at night) and a **value** (sell price). Selli
   - Click or chase it to **rescue** the brainrot. That's a dopamine moment, and good clip material.
   - If it escapes, the brainrot goes to the **Lost & Found**, where you buy it back for cash. It is never gone forever.
 - **Rewards:** defeated monsters drop **Moon Shards**. The 67 boss drops a guaranteed big shard pile plus a chance at a **Secret seed**.
-- **Moonlit:** anything that finishes growing at night has a 1-in-10 chance to become **Moonlit** (glowing).
+- **Moonlit:** a special ×5 mutation that only comes from the **Moon Pack** (25 Moon Shards, always in stock, 50% Moonlit). 
+- **Built so far:** `DayNightService` (6 min day / 2.5 min night, lighting fade, HUD timer), `MonsterService` (Grumbler waves every 20s scaling with players and night number; brainrot defense zaps; Giant Spoon tool; THE 67 boss with knockback stomps on every 3rd night; Moon Shard drops; Lil 67 seed chance from the boss), `LostFoundService` (booth by the plaza; buy back stolen brainrots as seeds, cheapest first). At dawn all monsters flee and drop what they carried.
+- Not yet: rescue chase polish, monster animations, sounds, balancing.
 
 ### 6. Mutations (value multipliers)
 Rolled at pack open (`Config/Mutations.luau`), boosted by pack mutation luck × server mutation luck:
@@ -189,6 +199,10 @@ Random, about every 15–25 min, lasting 2–3 min: **Pasta Rain**, **Thundersto
 - The publisher needs: an **ID / face age check**, **2FA**, and **Premium for 2+ months** or a refundable fee.
 - Plan: friends/Discord + a small Roblox Ads budget aimed at 16+ to clear the 250 engaged plays, while posting TikTok/Shorts daily.
 - After launch: a **weekly update on the same day** with a lobby countdown, plus an admin-abuse style live event right before each update.
+
+## Limited-time events (planned)
+- Event windows with **special mutations** (like Moonlit: `chance = 0`, granted only by event packs/weather) and **event-only brainrots** (roster entries flagged as event, sold in an event pack or dropped by an event boss while the event runs).
+- Admin-startable, with a countdown banner; event items stay tradeable/collectable after the event ends.
 
 ## First updates (after launch)
 Shovel stealing (backlog: preferably a free night mechanic with protection rather than a paid steal pass), fusion (deterministic recipes), new night bosses each update (trend monsters as original homages), season pass (~299), trading (PolicyService-gated), optional light raiding at night, codes + holiday event seeds.

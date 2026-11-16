@@ -99,7 +99,7 @@ local function rollOne(data, pack)
 
 	local id = Odds.pick(Odds.brainrots(rarityName), rng).id
 	local mutationLuck = pack.mutationLuck * services.LuckService.getMutationLuck()
-	local mutation = Odds.pick(Odds.mutations(mutationLuck), rng).id
+	local mutation = Odds.pick(Odds.mutations(mutationLuck, pack.bonusMutation), rng).id
 	return { id = id, mutation = mutation, pity = pity + 1 >= pack.pity.count }
 end
 
@@ -126,11 +126,20 @@ function ShopService.openPacks(player, pack, count: number)
 		return
 	end
 	local results = {}
+	local autoSold = 0
 	for _ = 1, count do
 		local result = rollOne(data, pack)
-		local key = Seeds.key(result.id, result.mutation)
-		data.seeds[key] = (data.seeds[key] or 0) + 1
+		if services.InventoryService.shouldAutoSell(data, result.id, result.mutation) then
+			result.autoSold = services.InventoryService.seedValue(result.id, result.mutation)
+			autoSold += result.autoSold
+		else
+			local key = Seeds.key(result.id, result.mutation)
+			data.seeds[key] = (data.seeds[key] or 0) + 1
+		end
 		table.insert(results, result)
+	end
+	if autoSold > 0 then
+		services.EconomyService.add(player, autoSold)
 	end
 	fx:FireClient(player, "PackOpened", pack.id, results)
 	-- announce after the reveal has had time to play
@@ -166,7 +175,15 @@ function ShopService.buy(player, packId, count)
 	if count < 1 then
 		return
 	end
-	if not services.EconomyService.spend(player, pack.price * count) then
+	local cost = pack.price * count
+	if pack.currency == "shards" then
+		local data = services.DataService.get(player)
+		if data.shards < cost then
+			fx:FireClient(player, "Toast", "Not enough Moon Shards! Defeat monsters at night to earn them.", Color3.fromRGB(170, 190, 255))
+			return
+		end
+		data.shards -= cost
+	elseif not services.EconomyService.spend(player, cost) then
 		fx:FireClient(player, "Toast", "Not enough cash!", Color3.fromRGB(255, 120, 120))
 		return
 	end

@@ -45,6 +45,15 @@ Packs.list = {
 		stockChance = 0.08, stock = { 1, 1 }, pity = { rarity = "Secret", count = 4 } },
 }
 
+-- Night pack: bought with Moon Shards from defeating monsters. bonusMutation is
+-- rolled first; if it misses, the normal mutation roll happens.
+table.insert(Packs.list, {
+	id = "MoonPack", name = "Moon Pack", price = 25, currency = "shards", color = rgb(150, 170, 255), mutationLuck = 3,
+	rarities = { { "Rare", 30 }, { "Epic", 45 }, { "Legendary", 22 }, { "Mythic", 3 } },
+	bonusMutation = { id = "Moonlit", chance = 0.5 },
+	stockChance = 1, stock = { 3, 5 }, pity = { rarity = "Legendary", count = 15 },
+})
+
 Packs.byId = {}
 for i, pack in Packs.list do
 	pack.order = i

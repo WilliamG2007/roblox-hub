@@ -81,7 +81,7 @@ local function renderOdds()
 		end
 	end
 	oddsLine("MUTATION (rolled separately)", Color3.new(1, 1, 1), 28, nextOrder())
-	for _, entry in Odds.mutations(pack.mutationLuck * mutationLuck) do
+	for _, entry in Odds.mutations(pack.mutationLuck * mutationLuck, pack.bonusMutation) do
 		local mutation = Mutations.byId[entry.id]
 		local label = if mutation.id == "Normal" then "Normal" else string.format("%s (x%d)", mutation.name, mutation.mult)
 		oddsLine(label .. ":  " .. percent(entry.chance), mutation.color, 22, nextOrder())
@@ -116,7 +116,8 @@ local function buildCard(item)
 	Kit.label({ Size = UDim2.fromScale(1, 1), Text = "?", TextSize = 48, Parent = icon })
 
 	Kit.label({ Position = UDim2.fromOffset(84, 8), Size = UDim2.new(1, -330, 0, 28), Text = pack.name, TextSize = 26, TextColor3 = pack.color, TextXAlignment = Enum.TextXAlignment.Left, TextTruncate = Enum.TextTruncate.AtEnd, Parent = frame })
-	local price = Kit.label({ Position = UDim2.fromOffset(84, 36), Size = UDim2.new(1, -330, 0, 24), Text = Format.cash(pack.price), TextSize = 22, TextColor3 = Kit.Theme.Cash, TextXAlignment = Enum.TextXAlignment.Left, Parent = frame })
+	local shardPack = pack.currency == "shards"
+	local price = Kit.label({ Position = UDim2.fromOffset(84, 36), Size = UDim2.new(1, -330, 0, 24), Text = if shardPack then pack.price .. " Moon Shards" else Format.cash(pack.price), TextSize = 22, TextColor3 = if shardPack then Color3.fromRGB(170, 200, 255) else Kit.Theme.Cash, TextXAlignment = Enum.TextXAlignment.Left, Parent = frame })
 	local stock = Kit.label({ Position = UDim2.fromOffset(84, 60), Size = UDim2.new(1, -330, 0, 18), Text = "", Font = Kit.Theme.Body, TextSize = 14, TextColor3 = Color3.fromRGB(210, 210, 230), TextXAlignment = Enum.TextXAlignment.Left, Parent = frame })
 
 	-- pity bar
@@ -161,9 +162,10 @@ local function refresh()
 			card.stock.Text = string.format("%s  ·  pity %d/%d → %s", if item.left > 0 then item.left .. " left" else "SOLD OUT", pity, pack.pity.count, pack.pity.rarity)
 			card.pityFill.Size = UDim2.fromScale(math.clamp(pity / pack.pity.count, 0, 1), 1)
 			local tenCount = math.min(10, item.left)
-			card.one.BackgroundColor3 = if item.left <= 0 then Color3.fromRGB(90, 90, 100) elseif data.cash >= pack.price then Kit.Theme.Good else Kit.Theme.Bad
+			local wallet = if pack.currency == "shards" then data.shards or 0 else data.cash
+			card.one.BackgroundColor3 = if item.left <= 0 then Color3.fromRGB(90, 90, 100) elseif wallet >= pack.price then Kit.Theme.Good else Kit.Theme.Bad
 			card.ten.Text = if tenCount > 1 then "x" .. tenCount else "x10"
-			card.ten.BackgroundColor3 = if tenCount <= 1 then Color3.fromRGB(90, 90, 100) elseif data.cash >= pack.price * tenCount then Kit.Theme.Good else Kit.Theme.Bad
+			card.ten.BackgroundColor3 = if tenCount <= 1 then Color3.fromRGB(90, 90, 100) elseif wallet >= pack.price * tenCount then Kit.Theme.Good else Kit.Theme.Bad
 		end
 	end
 end

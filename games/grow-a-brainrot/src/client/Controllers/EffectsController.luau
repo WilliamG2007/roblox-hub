@@ -130,6 +130,78 @@ function handlers.Burst(position, color)
 	lightBeam(position, color)
 end
 
+function handlers.Phase(phase, night, isBoss)
+	if phase == "Night" then
+		EffectsController.toast(if isBoss then "67 NIGHT HAS BEGUN... THE 67 IS AWAKE!" else string.format("NIGHT %d: the Grumblers are coming! Grab your Giant Spoon!", night), if isBoss then Color3.fromRGB(90, 170, 255) else Color3.fromRGB(190, 160, 255), 6)
+		Kit.sound(0.8, 0.5)
+	else
+		EffectsController.toast("The sun is up! Your garden is safe.", Color3.fromRGB(255, 230, 120), 4)
+		Kit.sound(0.6, 1.3)
+	end
+end
+
+-- brainrots zapping monsters: short neon beams
+function handlers.Zaps(zaps)
+	for _, zap in zaps do
+		local from, to, color = zap[1], zap[2], zap[3]
+		local distance = (to - from).Magnitude
+		local beam = Instance.new("Part")
+		beam.Anchored = true
+		beam.CanCollide = false
+		beam.CanQuery = false
+		beam.CastShadow = false
+		beam.Material = Enum.Material.Neon
+		beam.Color = color
+		beam.Size = Vector3.new(0.3, 0.3, distance)
+		beam.CFrame = CFrame.lookAt(from, to) * CFrame.new(0, 0, -distance / 2)
+		beam.Parent = workspace
+		TweenService:Create(beam, TweenInfo.new(0.25), { Transparency = 1, Size = Vector3.new(0.05, 0.05, distance) }):Play()
+		task.delay(0.25, function()
+			beam:Destroy()
+		end)
+	end
+end
+
+function handlers.Bonk(position)
+	burst(position, Color3.fromRGB(255, 255, 255), 10, 15)
+	Kit.sound(0.5, 0.6 + math.random() * 0.2)
+end
+
+function handlers.Shards(amount, position)
+	worldPopup(position + Vector3.new(0, 5, 0), "+" .. amount .. " Moon Shard" .. (if amount == 1 then "" else "s"), Color3.fromRGB(170, 200, 255), 44)
+	burst(position, Color3.fromRGB(170, 200, 255), 20, 18)
+end
+
+function handlers.Stomp(position)
+	local ring = Instance.new("Part")
+	ring.Anchored = true
+	ring.CanCollide = false
+	ring.CanQuery = false
+	ring.Shape = Enum.PartType.Cylinder
+	ring.Material = Enum.Material.Neon
+	ring.Color = Color3.fromRGB(60, 150, 255)
+	ring.Transparency = 0.3
+	ring.Size = Vector3.new(0.4, 4, 4)
+	ring.CFrame = CFrame.new(position + Vector3.new(0, 0.6, 0)) * CFrame.Angles(0, 0, math.pi / 2)
+	ring.Parent = workspace
+	TweenService:Create(ring, TweenInfo.new(0.6, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = Vector3.new(0.4, 60, 60), Transparency = 1 }):Play()
+	task.delay(0.6, function()
+		ring:Destroy()
+	end)
+	Kit.sound(0.9, 0.3)
+	-- camera shake if close
+	local camera = workspace.CurrentCamera
+	if (camera.CFrame.Position - position).Magnitude < 90 then
+		task.spawn(function()
+			for i = 1, 10 do
+				local intensity = (10 - i) * 0.04
+				camera.CFrame *= CFrame.Angles(math.random(-10, 10) / 100 * intensity, math.random(-10, 10) / 100 * intensity, 0)
+				task.wait()
+			end
+		end)
+	end
+end
+
 function handlers.Planted(position)
 	burst(position, Color3.fromRGB(140, 95, 60), 12, 10)
 end

@@ -172,7 +172,7 @@ function GardenService.sell(player, index)
 	local session = sessions[player]
 	local key = tostring(index)
 	local tile = session and session.data.tiles[key]
-	if not tile or tile.state ~= "grown" then
+	if not tile or tile.state ~= "grown" or tile.carried then
 		return
 	end
 	local def = Brainrots.byId[tile.id]
@@ -214,7 +214,7 @@ function GardenService.getIncome(player): number
 	end
 	local total = 0
 	for _, tile in session.data.tiles do
-		if tile.state == "grown" then
+		if tile.state == "grown" and not tile.carried then
 			total += incomeOf(tile)
 		end
 	end
@@ -248,6 +248,7 @@ function GardenService.loadPlayer(player, data, plot)
 		if not tilePart or not Brainrots.byId[tile.id] then
 			data.tiles[key] = nil -- drop corrupt or removed entries
 		else
+			tile.carried = nil
 			setTileAttributes(tilePart, tile)
 			if tile.state == "grown" then
 				spawnBrainrot(session, index, tile)
@@ -285,6 +286,114 @@ function GardenService.unloadPlayer(player)
 	for i = 1, services.PlotService.tileCount() do
 		setTileAttributes(services.PlotService.getTile(session.plot, i), nil)
 	end
+end
+
+--------------------------------------------------------------------------------
+-- Night support (used by MonsterService)
+
+-- Every grown brainrot that's sitting on its tile: monster targets + defenders.
+function GardenService.getBrainrots()
+	local list = {}
+	for player, session in sessions do
+		for key, tile in session.data.tiles do
+			local index = tonumber(key)
+			local model = session.models[index]
+			if tile.state == "grown" and not tile.carried and model and model.PrimaryPart then
+				table.insert(list, {
+					player = player,
+					index = index,
+					tile = tile,
+					position = model.PrimaryPart.Position,
+					rarity = Brainrots.byId[tile.id].rarity,
+					mutationOrder = mutationOf(tile).order,
+				})
+			end
+		end
+	end
+	return list
+end
+
+function GardenService.getGrowing()
+	local list = {}
+	for player, session in sessions do
+		for key, tile in session.data.tiles do
+			if tile.state == "growing" then
+				local index = tonumber(key)
+				table.insert(list, { player = player, index = index, position = services.PlotService.getTile(session.plot, index).Position })
+			end
+		end
+	end
+	return list
+end
+
+-- A monster grabs a brainrot: it stops earning and the monster carries its model.
+function GardenService.carry(player, index): Model?
+	local session = sessions[player]
+	local tile = session and session.data.tiles[tostring(index)]
+	local model = session and session.models[index]
+	if not tile or tile.state ~= "grown" or tile.carried or not model then
+		return nil
+	end
+	tile.carried = true
+	local prompt = model.PrimaryPart:FindFirstChild("SellPrompt")
+	if prompt then
+		prompt.Enabled = false
+	end
+	services.SyncService.mark(player)
+	return model
+end
+
+-- Rescued (monster defeated or dawn): back onto its tile.
+function GardenService.returnHome(player, index)
+	local session = sessions[player]
+	local tile = session and session.data.tiles[tostring(index)]
+	local model = session and session.models[index]
+	if not tile or not model then
+		return
+	end
+	tile.carried = nil
+	local tilePart = services.PlotService.getTile(session.plot, index)
+	model:PivotTo(tilePart.CFrame * CFrame.new(0, tilePart.Size.Y / 2, 0))
+	local prompt = model.PrimaryPart:FindFirstChild("SellPrompt")
+	if prompt then
+		prompt.Enabled = true
+	end
+	services.SyncService.mark(player)
+end
+
+-- The monster escaped: the brainrot goes to the Lost & Found.
+function GardenService.lose(player, index)
+	local session = sessions[player]
+	local key = tostring(index)
+	local tile = session and session.data.tiles[key]
+	if not tile then
+		return
+	end
+	table.insert(session.data.lostFound, { id = tile.id, mutation = tile.mutation or "Normal" })
+	session.data.tiles[key] = nil
+	local model = session.models[index]
+	if model then
+		model:Destroy()
+		session.models[index] = nil
+	end
+	setTileAttributes(services.PlotService.getTile(session.plot, index), nil)
+	fx:FireClient(player, "Toast", "A monster ran off with your " .. Brainrots.byId[tile.id].name .. "! Get it back at the Lost & Found.", Color3.fromRGB(255, 140, 140))
+	services.SyncService.mark(player)
+end
+
+-- A monster nibbles a growing plant: it takes longer to pop.
+function GardenService.slowGrowth(player, index, fraction: number)
+	local session = sessions[player]
+	local tile = session and session.data.tiles[tostring(index)]
+	if tile and tile.state == "growing" then
+		tile.plantedAt += tile.growTime * fraction
+		setTileAttributes(services.PlotService.getTile(session.plot, index), tile)
+	end
+end
+
+function GardenService.getModel(player, index)
+	local session = sessions[player]
+	return session and session.models[index]
 end
 
 -- Admin: makes every growing plant ready to pop on the next growth check.
@@ -351,7 +460,7 @@ function GardenService.start()
 			for _, session in sessions do
 				local stored = 0
 				for key, tile in session.data.tiles do
-					if tile.state == "grown" then
+					if tile.state == "grown" and not tile.carried then
 						tile.stored = (tile.stored or 0) + incomeOf(tile)
 						stored += tile.stored
 						local model = session.models[tonumber(key)]

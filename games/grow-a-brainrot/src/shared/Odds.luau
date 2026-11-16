@@ -45,13 +45,27 @@ function Odds.brainrots(rarityName: string)
 	return entries
 end
 
--- Mutation chances given a combined mutation luck multiplier.
-function Odds.mutations(mutationLuck: number?)
+-- Mutation chances given a combined mutation luck multiplier. An optional
+-- bonus ({ id, chance }) is rolled first (e.g. Moon Pack's Moonlit); the
+-- normal table covers the remaining probability.
+function Odds.mutations(mutationLuck: number?, bonus: { id: string, chance: number }?)
+	local base = Odds.baseMutations(mutationLuck)
+	if not bonus then
+		return base
+	end
+	local entries = { { id = bonus.id, chance = bonus.chance } }
+	for _, entry in base do
+		table.insert(entries, { id = entry.id, chance = entry.chance * (1 - bonus.chance) })
+	end
+	return entries
+end
+
+function Odds.baseMutations(mutationLuck: number?)
 	mutationLuck = mutationLuck or 1
 	local entries = {}
 	local mutated = 0
 	for _, mutation in Mutations.list do
-		if mutation.id ~= "Normal" then
+		if mutation.id ~= "Normal" and mutation.chance > 0 then
 			local chance = mutation.chance * mutationLuck
 			mutated += chance
 			table.insert(entries, { id = mutation.id, chance = chance })

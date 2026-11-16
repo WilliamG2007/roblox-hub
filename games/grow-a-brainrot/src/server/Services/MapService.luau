@@ -128,6 +128,18 @@ function MapService.init()
 		Vector3.new(roadX, roadTop, -roadZ),
 	}
 
+	-- Lost & Found booth (brainrots stolen by night monsters)
+	local booth = part(root, { Name = "LostFound", Size = Vector3.new(10, 5, 6), CFrame = CFrame.new(-24, 3, 14), Color = Color3.fromRGB(110, 90, 200) })
+	part(root, { Name = "LostFoundTop", Size = Vector3.new(11, 0.8, 7), CFrame = CFrame.new(-24, 5.9, 14), Color = Color3.fromRGB(255, 240, 220) })
+	sign(booth, "LOST & FOUND", UDim2.fromOffset(300, 60), Color3.fromRGB(200, 190, 255)).StudsOffset = Vector3.new(0, 6, 0)
+	local lostPrompt = Instance.new("ProximityPrompt")
+	lostPrompt.ActionText = "Recover stolen brainrots"
+	lostPrompt.ObjectText = "Lost & Found"
+	lostPrompt.MaxActivationDistance = 12
+	lostPrompt.RequiresLineOfSight = false
+	lostPrompt.Parent = booth
+	MapService.LostFoundPrompt = lostPrompt
+
 	local stand, prompt = buildShop(root)
 	MapService.ShopStand = stand
 	MapService.ShopPrompt = prompt

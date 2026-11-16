@@ -4,11 +4,12 @@
 --   Plant    client -> server  (tileIndex, seedKey)
 --   BuyPack  client -> server  (packId, count)
 --   Admin    client -> server  (commandText)  admin panel; server re-checks permissions
+--   Inventory client -> server (action, ...)  "Sell" key count | "SellRarity" rarity | "AutoSell" rarity bool
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
-local NAMES = { "State", "Fx", "Plant", "BuyPack", "Admin" }
+local NAMES = { "State", "Fx", "Plant", "BuyPack", "Admin", "Inventory" }
 local FOLDER_NAME = "Remotes"
 
 local Remotes = {}

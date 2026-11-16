@@ -34,6 +34,9 @@ local function send(player)
 		shop = services.ShopService.snapshot(player),
 		plotIndex = services.PlotService.getPlotIndex(player),
 		discovered = data.index,
+		shards = data.shards,
+		autoSell = data.autoSell,
+		lostCount = #data.lostFound,
 		canSave = services.DataService.canSave(player),
 	})
 	local leaderstats = player:FindFirstChild("leaderstats")

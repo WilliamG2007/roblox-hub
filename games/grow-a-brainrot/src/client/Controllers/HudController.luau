@@ -22,6 +22,16 @@ function HudController.start(controllers)
 	local cashLabel = Kit.label({ Size = UDim2.new(1, 0, 0, 64), Text = "$0", TextSize = 60, TextColor3 = Kit.Theme.Cash, TextStrokeTransparency = 0, Parent = top })
 	Kit.new("UIStroke", { Thickness = 3, Color = Color3.fromRGB(20, 60, 25), Parent = cashLabel })
 	local incomeLabel = Kit.label({ Position = UDim2.fromOffset(0, 62), Size = UDim2.new(1, 0, 0, 28), Text = "+$0/s", TextSize = 26, Parent = top })
+	-- phase + shards (top-left)
+	local side = Kit.autoScale(Kit.new("Frame", {
+		Position = UDim2.fromOffset(16, 60),
+		Size = UDim2.fromOffset(300, 70),
+		BackgroundTransparency = 1,
+		Parent = gui,
+	}))
+	local phaseLabel = Kit.label({ Size = UDim2.new(1, 0, 0, 34), Text = "", TextSize = 28, TextXAlignment = Enum.TextXAlignment.Left, TextStrokeTransparency = 0, Parent = side })
+	local shardsLabel = Kit.label({ Position = UDim2.fromOffset(0, 36), Size = UDim2.new(1, 0, 0, 28), Text = "", TextSize = 24, TextColor3 = Color3.fromRGB(170, 200, 255), TextXAlignment = Enum.TextXAlignment.Left, TextStrokeTransparency = 0, Parent = side })
+
 	local luckBanner = Kit.label({ Position = UDim2.fromOffset(-100, 94), Size = UDim2.new(1, 200, 0, 30), Text = "", TextSize = 28, TextColor3 = Kit.Theme.Accent, TextStrokeTransparency = 0, Visible = false, Parent = top })
 
 	local holder = Kit.autoScale(Kit.new("Frame", {
@@ -58,6 +68,18 @@ function HudController.start(controllers)
 		incomeLabel.Text = "+" .. Format.cash(data.income) .. "/s"
 		local now = workspace:GetServerTimeNow()
 		restockLabel.Text = "Restock " .. Format.time(data.shop.endsAt - now)
+
+		local phase = ReplicatedStorage:GetAttribute("Phase") or "Day"
+		local phaseLeft = Format.time((ReplicatedStorage:GetAttribute("PhaseEndsAt") or now) - now)
+		if phase == "Night" then
+			local boss = ReplicatedStorage:GetAttribute("BossNight")
+			phaseLabel.Text = string.format("%s %d  ·  %s", if boss then "67 NIGHT" else "NIGHT", ReplicatedStorage:GetAttribute("NightNumber") or 1, phaseLeft)
+			phaseLabel.TextColor3 = if boss then Color3.fromRGB(90, 170, 255) else Color3.fromRGB(190, 160, 255)
+		else
+			phaseLabel.Text = "Day  ·  night in " .. phaseLeft
+			phaseLabel.TextColor3 = Color3.fromRGB(255, 230, 120)
+		end
+		shardsLabel.Text = string.format("Moon Shards: %d%s", data.shards or 0, if (data.lostCount or 0) > 0 then string.format("   ·   %d at Lost & Found", data.lostCount) else "")
 
 		local luckEnds = ReplicatedStorage:GetAttribute("LuckEndsAt") or 0
 		luckBanner.Visible = luckEnds > now

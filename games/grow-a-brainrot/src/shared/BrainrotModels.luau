@@ -115,6 +115,9 @@ local function applyMutation(model, mutationId)
 			elseif mutationId == "Galaxy" then
 				p.Color = if i % 2 == 0 then Color3.fromRGB(70, 30, 140) else Color3.fromRGB(120, 60, 220)
 				p.Material = Enum.Material.Neon
+			elseif mutationId == "Moonlit" then
+				p.Color = Color3.fromRGB(150, 175, 255)
+				p.Material = Enum.Material.Glass
 			elseif mutationId == "SixtySeven" then
 				p.Color = if i % 2 == 0 then Color3.fromRGB(255, 60, 60) else Color3.fromRGB(60, 150, 255)
 			end

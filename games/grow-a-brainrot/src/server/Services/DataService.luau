@@ -36,6 +36,9 @@ local function defaultData()
 		index = {}, -- [brainrotId] = true once grown
 		shop = { stockId = "", bought = {} },
 		pity = {}, -- [packId] = opens since last pity-rarity hit
+		shards = 0, -- Moon Shards from defeating night monsters
+		lostFound = {}, -- { { id, mutation } } brainrots monsters ran off with
+		autoSell = {}, -- [rarityName] = true: Normal seeds of that rarity auto-sell from packs
 		stats = { planted = 0, grown = 0, earned = 0 },
 		lastSave = 0,
 	}

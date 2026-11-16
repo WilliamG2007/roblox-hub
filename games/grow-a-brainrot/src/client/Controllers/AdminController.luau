@@ -32,6 +32,14 @@ local QUICK = {
 	{ "Clear garden (me)", "clear" },
 	{ "Speed 50 (me)", "speed 50" },
 	{ "Speed 16 (me)", "speed 16" },
+	{ "Start night", "night" },
+	{ "67 NIGHT", "night boss" },
+	{ "Skip to day", "day" },
+	{ "Spawn 5 Grumblers", "spawn 5" },
+	{ "Spawn THE 67", "boss" },
+	{ "+100 Moon Shards", "shards 100" },
+	{ "Toggle 2x Roll (me)", "pass FastRoll" },
+	{ "Wild brainrot", "wander" },
 }
 
 function AdminController.start()
@@ -91,7 +99,7 @@ function AdminController.start()
 	end)
 
 	-- quick actions
-	local grid = Kit.new("Frame", { Position = UDim2.fromOffset(12, 98), Size = UDim2.new(1, -24, 0, 300), BackgroundTransparency = 1, Parent = panel })
+	local grid = Kit.new("ScrollingFrame", { Position = UDim2.fromOffset(12, 98), Size = UDim2.new(1, -24, 0, 300), BackgroundTransparency = 1, BorderSizePixel = 0, ScrollBarThickness = 5, AutomaticCanvasSize = Enum.AutomaticSize.Y, CanvasSize = UDim2.new(), Parent = panel })
 	Kit.new("UIGridLayout", { CellSize = UDim2.new(0.5, -4, 0, 32), CellPadding = UDim2.fromOffset(8, 5), SortOrder = Enum.SortOrder.LayoutOrder, Parent = grid })
 	for i, quick in QUICK do
 		local button = Kit.button({ Text = quick[1], TextSize = 16, BackgroundColor3 = Color3.fromRGB(70, 60, 130), LayoutOrder = i, Parent = grid })
