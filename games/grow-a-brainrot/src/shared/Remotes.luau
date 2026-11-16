@@ -3,11 +3,12 @@
 --   Fx     server -> client  one-shot events (pops, toasts, collects...)
 --   Plant    client -> server  (tileIndex, seedKey)
 --   BuyPack  client -> server  (packId, count)
+--   Admin    client -> server  (commandText)  admin panel; server re-checks permissions
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
-local NAMES = { "State", "Fx", "Plant", "BuyPack" }
+local NAMES = { "State", "Fx", "Plant", "BuyPack", "Admin" }
 local FOLDER_NAME = "Remotes"
 
 local Remotes = {}

@@ -110,6 +110,18 @@ function DataService.get(player)
 	return profile and profile.data
 end
 
+-- Admin: replaces a player's data with a fresh save (keeps the session lock).
+function DataService.reset(player)
+	local profile = profiles[player]
+	if not profile then
+		return nil
+	end
+	local fresh = defaultData()
+	fresh.lock = profile.data.lock
+	profile.data = fresh
+	return fresh
+end
+
 function DataService.canSave(player)
 	local profile = profiles[player]
 	return profile ~= nil and profile.canSave

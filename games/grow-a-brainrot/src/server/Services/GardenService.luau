@@ -287,6 +287,40 @@ function GardenService.unloadPlayer(player)
 	end
 end
 
+-- Admin: makes every growing plant ready to pop on the next growth check.
+function GardenService.finishGrowing(player)
+	local session = sessions[player]
+	if not session then
+		return
+	end
+	for _, tile in session.data.tiles do
+		if tile.state == "growing" then
+			tile.plantedAt = now() - tile.growTime
+		end
+	end
+end
+
+-- Admin: removes every plant and brainrot from a player's garden.
+function GardenService.clearGarden(player)
+	local session = sessions[player]
+	if not session then
+		return
+	end
+	for index, model in session.models do
+		model:Destroy()
+		session.models[index] = nil
+	end
+	table.clear(session.data.tiles)
+	for i = 1, services.PlotService.tileCount() do
+		setTileAttributes(services.PlotService.getTile(session.plot, i), nil)
+	end
+	services.SyncService.mark(player)
+end
+
+function GardenService.hasSession(player)
+	return sessions[player] ~= nil
+end
+
 function GardenService.init(s)
 	services = s
 	fx = Remotes.get("Fx")

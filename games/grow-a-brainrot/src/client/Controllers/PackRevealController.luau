@@ -19,7 +19,27 @@ local Mutations = require(Shared.Config.Mutations)
 local Packs = require(Shared.Config.Packs)
 local Kit = require(script.Parent.Parent.UI.Kit)
 
+local Seeds = require(Shared.Seeds)
+
 local PackRevealController = {}
+
+-- Seeds that exist server-side but whose reveal hasn't finished yet.
+-- The hotbar hides these so the reveal isn't spoiled.
+PackRevealController.pending = {} -- [seedKey] = count
+local revealDone = Instance.new("BindableEvent")
+PackRevealController.PendingChanged = revealDone.Event
+
+local function addPending(results, delta)
+	local pending = PackRevealController.pending
+	for _, result in results do
+		local key = Seeds.key(result.id, result.mutation)
+		pending[key] = (pending[key] or 0) + delta
+		if pending[key] <= 0 then
+			pending[key] = nil
+		end
+	end
+	revealDone:Fire()
+end
 
 local CARD_W, CARD_H, GAP = 130, 160, 10
 local STEP = CARD_W + GAP
@@ -263,6 +283,7 @@ local function playNext()
 	else
 		playMulti(pack, job.results)
 	end
+	addPending(job.results, -1) -- reveal is over: show the seeds in the hotbar now
 	local hint = bigText("Seeds added to your hotbar!  (click to continue)", Color3.fromRGB(200, 255, 200), 600, 30)
 	hint.TextTransparency = 0.1
 	skip = false
@@ -304,6 +325,7 @@ function PackRevealController.start()
 
 	Remotes.get("Fx").OnClientEvent:Connect(function(kind, packId, results)
 		if kind == "PackOpened" and Packs.byId[packId] and type(results) == "table" then
+			addPending(results, 1)
 			table.insert(queue, { packId = packId, results = results })
 			task.spawn(playNext)
 		end

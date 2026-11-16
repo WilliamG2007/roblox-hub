@@ -22,6 +22,7 @@ local bar, hint
 local buttons = {}
 local selected = nil
 local highlight
+local pending = {}
 
 local function myPlot()
 	local data = State.data
@@ -68,7 +69,11 @@ local function rebuild()
 	-- seed keys are "<brainrotId>|<mutation>"; best seeds first
 	local keys = {}
 	local parsed = {}
+	local counts = {}
 	for key, count in data.seeds do
+		-- hide seeds whose pack reveal is still playing
+		count -= pending[key] or 0
+		counts[key] = count
 		local id, mutation = Seeds.parse(key)
 		if count > 0 and Brainrots.byId[id] and Mutations.byId[mutation] then
 			table.insert(keys, key)
@@ -107,7 +112,7 @@ local function rebuild()
 			buttons[key] = button
 		end
 		button.LayoutOrder = i
-		button.Count.Text = "x" .. data.seeds[key]
+		button.Count.Text = "x" .. counts[key]
 	end
 	for id, button in buttons do
 		if not wanted[id] then
@@ -167,7 +172,9 @@ function PlantController.start(controllers)
 	highlight.Enabled = false
 	highlight.Parent = workspace.CurrentCamera
 
+	pending = controllers.PackRevealController.pending
 	State.Changed:Connect(rebuild)
+	controllers.PackRevealController.PendingChanged:Connect(rebuild)
 
 	UserInputService.InputBegan:Connect(function(input, processed)
 		if processed then

@@ -51,7 +51,7 @@ buy seeds → plant → watch them grow  ──►   monsters raid gardens
 
 ### Luck, admin events, fame (built in M1.5)
 - **Server luck events** every 15–25 min: LUCK STORM (x2 luck), 67 SECONDS OF CHAOS (x6.7 mutations), BRAINROT FRENZY. Luck boosts higher rarity tiers' weights.
-- **Admin chat commands** (creator, `Config.Game.Admins`, everyone in Studio): `/luck`, `/mutluck`, `/givepack <1-10|name> <count>` (free packs for the whole server), `/restock`, `/cash`.
+- **Admin controls** (creator, `Config.Game.Admins`, everyone in Studio): an **ADMIN panel** (bottom-left button or F2) with quick actions + a command box, and the same commands in chat with `/`. Full list in `shared/AdminCommands.luau`: luck, mutluck, custom-named `event`, endevent, givepack, seed, cash, setcash, restock, stock, grow, clear, reset, announce, speed, tp. Targets: me / all / player name.
 - **Pull announcements:** Legendary+ or Rainbow+ pulls are announced to the server and go on the **Wall of Fame** board in the plaza. Secrets and 67 mutations are announced to **every server** via MessagingService.
 
 ### 3. Growing

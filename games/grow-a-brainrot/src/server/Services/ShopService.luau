@@ -181,6 +181,22 @@ function ShopService.forceRestock()
 	markAll()
 end
 
+-- Admin: puts a pack into the current stock (or raises its quantity).
+function ShopService.addToStock(packId: string, qty: number)
+	for _, item in currentStock do
+		if item.id == packId then
+			item.qty += qty
+			markAll()
+			return
+		end
+	end
+	table.insert(currentStock, { id = packId, qty = qty })
+	table.sort(currentStock, function(a, b)
+		return Packs.byId[a.id].order < Packs.byId[b.id].order
+	end)
+	markAll()
+end
+
 function ShopService.snapshot(player)
 	local shop = playerShop(player)
 	local data = services.DataService.get(player)

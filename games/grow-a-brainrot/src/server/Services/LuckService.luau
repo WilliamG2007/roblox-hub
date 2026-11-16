@@ -45,6 +45,12 @@ function LuckService.startEvent(name: string, luck: number, mutationLuck: number
 	end)
 end
 
+function LuckService.endEvent()
+	current.token += 1
+	current.luck, current.mutationLuck, current.name, current.endsAt = 1, 1, "", 0
+	publish()
+end
+
 function LuckService.init()
 	fx = Remotes.get("Fx")
 	publish()
