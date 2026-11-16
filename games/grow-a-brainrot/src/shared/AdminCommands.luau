@@ -13,6 +13,7 @@ return {
 	{ name = "seed", usage = "seed <brainrot> [mutation=Normal] [count=1] [target]", desc = "Give seeds directly" },
 	{ name = "cash", usage = "cash <amount> [target]", desc = "Add cash" },
 	{ name = "setcash", usage = "setcash <amount> [target]", desc = "Set cash exactly" },
+	{ name = "wander", usage = "wander [brainrot|random] [mutation] [free]", desc = "Send a wild brainrot down the road" },
 	{ name = "restock", usage = "restock", desc = "Instant new shop stock" },
 	{ name = "stock", usage = "stock <pack> [qty=5]", desc = "Put a pack into the current stock" },
 	{ name = "grow", usage = "grow [target]", desc = "Finish all growing plants instantly" },

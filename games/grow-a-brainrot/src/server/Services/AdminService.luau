@@ -168,6 +168,19 @@ function handlers.setcash(admin, args)
 	reply(admin, "Cash set to " .. Format.cash(amount))
 end
 
+function handlers.wander(_, args)
+	local free = args[3] ~= nil and string.lower(args[3]) == "free"
+	if not args[1] or string.lower(args[1]) == "random" then
+		services.WanderService.spawn(nil, nil, if free then true else nil)
+		return
+	end
+	local def = findIn(Brainrots.list, args[1], { "id", "name" })
+	assert(def, "unknown brainrot '" .. tostring(args[1]) .. "'")
+	local mutation = findIn(Mutations.list, args[2] or "Normal", { "id", "name" })
+	assert(mutation, "unknown mutation '" .. tostring(args[2]) .. "'")
+	services.WanderService.spawn(def.id, mutation.id, free)
+end
+
 function handlers.restock()
 	services.ShopService.forceRestock()
 end

@@ -108,6 +108,26 @@ function MapService.init()
 	root.Name = "GrowABrainrotWorld"
 	part(root, { Name = "Ground", Size = Vector3.new(420, 1, 340), CFrame = CFrame.new(0, 0, 0), Color = Color3.fromRGB(95, 200, 90) })
 	part(root, { Name = "Plaza", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.4, 60, 60), CFrame = CFrame.new(0, 0.6, 0) * CFrame.Angles(0, 0, math.pi / 2), Color = Color3.fromRGB(240, 225, 190) })
+	-- road loop around the plaza where wild brainrots walk
+	local roadX, roadZ, roadWidth, roadTop = 160, 38, 10, 0.8
+	local roadColor = Color3.fromRGB(105, 105, 120)
+	part(root, { Name = "Road", Size = Vector3.new(roadX * 2 + roadWidth, 0.6, roadWidth), CFrame = CFrame.new(0, 0.5, roadZ), Color = roadColor })
+	part(root, { Name = "Road", Size = Vector3.new(roadX * 2 + roadWidth, 0.6, roadWidth), CFrame = CFrame.new(0, 0.5, -roadZ), Color = roadColor })
+	part(root, { Name = "Road", Size = Vector3.new(roadWidth, 0.6, roadZ * 2), CFrame = CFrame.new(roadX, 0.5, 0), Color = roadColor })
+	part(root, { Name = "Road", Size = Vector3.new(roadWidth, 0.6, roadZ * 2), CFrame = CFrame.new(-roadX, 0.5, 0), Color = roadColor })
+	-- dashed center line
+	for x = -roadX + 10, roadX - 10, 20 do
+		for _, z in { roadZ, -roadZ } do
+			part(root, { Name = "RoadLine", Size = Vector3.new(8, 0.1, 0.8), CFrame = CFrame.new(x, 0.85, z), Color = Color3.fromRGB(255, 220, 80), CanCollide = false })
+		end
+	end
+	MapService.RoadWaypoints = {
+		Vector3.new(roadX, roadTop, roadZ),
+		Vector3.new(-roadX, roadTop, roadZ),
+		Vector3.new(-roadX, roadTop, -roadZ),
+		Vector3.new(roadX, roadTop, -roadZ),
+	}
+
 	local stand, prompt = buildShop(root)
 	MapService.ShopStand = stand
 	MapService.ShopPrompt = prompt

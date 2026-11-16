@@ -10,7 +10,7 @@ Remotes.setup()
 -- order matters: init runs top to bottom, then start runs top to bottom
 local ORDER = {
 	"DataService", "MapService", "EconomyService", "SyncService", "PlotService",
-	"LuckService", "FameService", "ShopService", "GardenService", "AdminService",
+	"LuckService", "FameService", "ShopService", "GardenService", "WanderService", "AdminService",
 }
 
 local services = {}

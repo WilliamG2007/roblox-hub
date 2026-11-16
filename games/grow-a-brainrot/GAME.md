@@ -52,6 +52,7 @@ buy seeds → plant → watch them grow  ──►   monsters raid gardens
 ### Luck, admin events, fame (built in M1.5)
 - **Server luck events** every 15–25 min: LUCK STORM (x2 luck), 67 SECONDS OF CHAOS (x6.7 mutations), BRAINROT FRENZY. Luck boosts higher rarity tiers' weights.
 - **Admin controls** (creator, `Config.Game.Admins`, everyone in Studio): an **ADMIN panel** (bottom-left button or F2) with quick actions + a command box, and the same commands in chat with `/`. Full list in `shared/AdminCommands.luau`: luck, mutluck, custom-named `event`, endevent, givepack, seed, cash, setcash, restock, stock, grow, clear, reset, announce, speed, tp. Targets: me / all / player name.
+- **Wild brainrots** (`WanderService`): every 2.5–5 min a rare, often mutated, oversized brainrot with a light beam walks one lap of the road around the plaza. Server-wide alert; first player to buy it (price = 90s of its income) gets its seed. 20% are FREE (Rare/Epic): pure race. Luck events improve them. Admin: `wander [brainrot] [mutation] [free]`.
 - **Pull announcements:** Legendary+ or Rainbow+ pulls are announced to the server and go on the **Wall of Fame** board in the plaza. Secrets and 67 mutations are announced to **every server** via MessagingService.
 
 ### 3. Growing
@@ -169,7 +170,7 @@ Random, about every 15–25 min, lasting 2–3 min: **Pasta Rain**, **Thundersto
 - `shared/Config/`: `Game` (tuning), `Rarities`, `Brainrots` (roster). Balance changes go here.
 - `shared/BrainrotModels`: builds a brainrot model; uses `ReplicatedStorage.Assets.Brainrots.<id>` if real art exists, otherwise a placeholder.
 - `shared/Config/Packs`, `shared/Config/Mutations`; `shared/Odds` (all probability math, shared by UI + server); `shared/Seeds` (seed keys `id|mutation`); `shared/Style` (studded bricks); `shared/Remotes`, `shared/Format`.
-- `server/Services/`: `DataService` (save + session lock), `EconomyService` (cash), `SyncService` (state to client), `MapService` (world), `PlotService` (gardens), `ShopService` (pack stock, buying, rolls, pity), `GardenService` (plant → grow → pop → earn → collect/sell), `LuckService` (server luck events), `FameService` (announcements, Wall of Fame, cross-server pulls), `AdminService` (chat commands).
+- `server/Services/`: `DataService` (save + session lock), `EconomyService` (cash), `SyncService` (state to client), `MapService` (world), `PlotService` (gardens), `ShopService` (pack stock, buying, rolls, pity), `GardenService` (plant → grow → pop → earn → collect/sell), `LuckService` (server luck events), `FameService` (announcements, Wall of Fame, cross-server pulls), `AdminService` (chat commands + panel), `WanderService` (wild brainrots on the road).
 - `client/Controllers/`: `State`, `HudController`, `ShopController`, `PlantController` (hotbar + planting), `GrowthController` (sprout visuals), `EffectsController` (pops, cash popups, toasts), `PackRevealController` (reel + mutation slot, 10x flips), `MutationFxController` (rainbow animation). `client/UI/Kit` = shared UI helpers.
 - New system = new Service/Controller file + one line in `Main.server.luau` / `Main.client.luau`.
 

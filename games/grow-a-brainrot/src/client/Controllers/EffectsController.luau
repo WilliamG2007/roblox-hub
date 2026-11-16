@@ -125,6 +125,11 @@ function handlers.Announce(text, color)
 	Kit.sound(0.6, 0.8)
 end
 
+function handlers.Burst(position, color)
+	burst(position + Vector3.new(0, 2, 0), color, 50, 30)
+	lightBeam(position, color)
+end
+
 function handlers.Planted(position)
 	burst(position, Color3.fromRGB(140, 95, 60), 12, 10)
 end

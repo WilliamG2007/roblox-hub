@@ -35,6 +35,20 @@ return {
 		},
 	},
 
+	-- wild brainrots walking the road around the plaza; first to buy/grab wins
+	Wanderers = {
+		MinInterval = 150,
+		MaxInterval = 300,
+		MaxActive = 2,
+		Speed = 7, -- studs per second
+		Scale = 1.6, -- bigger than garden brainrots so they stand out
+		PriceIncomeSeconds = 90, -- price = this many seconds of its income
+		mutationLuck = 3,
+		rarities = { { "Epic", 55 }, { "Legendary", 35 }, { "Mythic", 9 }, { "Secret", 1 } },
+		FreeChance = 0.2, -- sometimes one is free: pure race
+		freeRarities = { { "Rare", 60 }, { "Epic", 40 } },
+	},
+
 	-- extra admin UserIds (the game's creator is always admin; everyone is admin in Studio)
 	Admins = {},
 
