@@ -168,6 +168,17 @@ Random, about every 15–25 min, lasting 2–3 min: **Pasta Rain**, **Thundersto
 
 ---
 
+## Look & sound (overhaul, Nov 2026)
+**Art direction:** bubbly, glossy, colorful plastic with real studs used as accents (ledges, corners, tops), not on every surface. Everything is built from  (palette, , , , , / decor tags). New props should use those builders and .
+- **World** (): layered plaza with a stud ring and floating gems, rounded pack shop with a floating sign and light bulbs, curbed road, candy and leafy trees, flower beds, rolling hills, drifting clouds; tuned lighting (bloom, sun rays, atmosphere, color correction).
+- **Gardens** (): rounded grass bed on a colored ledge, stud strip, glowing corner orbs, inset dirt beds, glowing collect pad with a spinning coin, sign board.
+- **Brainrot placeholders** (): capsule/bean/blob bodies, googly eyes with shines, cheeks, smile, feet, shape-specific accessories, a stud on top. Real art in  still overrides.
+- **Client animation**:  (float/spin/clouds),  (springy pop-in, idle bob/sway),  (leaves, sparkles near popping, rarity pedestals).
+
+**UI** (): glossy buttons with hover grow / press squish / bounce + sounds;  (gradient header, shadow, slide/fade); currency pills; toasts that slide in; coins fly into the cash counter. All screens use these; new UI should too.
+
+**Audio:** original synthesized pack:  →  (30 SFX + day/night music). Upload with  (Open Cloud API key, see the top of that file), which writes . Until uploaded,  falls back to the few sounds that ship with Roblox (verified in the install's content/sounds); music stays silent. Play sounds only through  (groups, pitch variation, cooldowns, 3D, music crossfade). Never put unverified asset IDs in code.
+
 ## Tech architecture
 - `src/shared/`: `Config` (seeds, brainrots, rarities, mutations, prices, timings), `Format` (number formatting).
 - `src/server/`: `DataService` (DataStore with session locking + retries), `PlotService`, `ShopService`, `GrowthService`, `DayNightService`, `MonsterService`, `WeatherService`, `MonetizationService` (MarketplaceService receipts, PolicyService gating), `Main.server.luau` (wires them together).

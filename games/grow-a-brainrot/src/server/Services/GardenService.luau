@@ -335,6 +335,7 @@ function GardenService.carry(player, index): Model?
 		return nil
 	end
 	tile.carried = true
+	model:SetAttribute("Carried", true) -- client idle animation steps aside
 	local prompt = model.PrimaryPart:FindFirstChild("SellPrompt")
 	if prompt then
 		prompt.Enabled = false
@@ -354,6 +355,7 @@ function GardenService.returnHome(player, index)
 	tile.carried = nil
 	local tilePart = services.PlotService.getTile(session.plot, index)
 	model:PivotTo(tilePart.CFrame * CFrame.new(0, tilePart.Size.Y / 2, 0))
+	model:SetAttribute("Carried", false)
 	local prompt = model.PrimaryPart:FindFirstChild("SellPrompt")
 	if prompt then
 		prompt.Enabled = true

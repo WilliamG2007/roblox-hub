@@ -12,78 +12,126 @@ local Style = require(script.Parent.Style)
 
 local BrainrotModels = {}
 
-local SHAPES = {
-	tall = Vector3.new(3, 4.5, 3),
-	wide = Vector3.new(4.6, 2.8, 3.6),
-	long = Vector3.new(3, 3, 5),
-	blob = Vector3.new(3.8, 3.8, 3.8),
-}
+-- parts that keep their colors when a mutation recolors the brainrot
+local FACE_PARTS = { Eye = true, Pupil = true, Shine = true, Mouth = true, Cheek = true }
 
-local FACE_PARTS = { Eye = true, Pupil = true }
+local FEET = 0.7
 
-local function part(model, props)
+local function part(model, name, shape, size, cframe, color, gloss)
 	local p = Instance.new("Part")
+	p.Name = name
 	p.Anchored = true
 	p.CanCollide = false
-	if props.Shape then
-		p.Shape = props.Shape
-		props.Shape = nil
-	end
-	for key, value in props do
-		p[key] = value
-	end
-	Style.brick(p)
+	p.Shape = shape
+	p.Size = size
+	p.CFrame = cframe
+	p.Color = color
+	Style.plastic(p, gloss or 0.06)
 	p.Parent = model
 	return p
 end
 
+local function ball(model, name, d, cframe, color, gloss)
+	return part(model, name, Enum.PartType.Ball, Vector3.one * d, cframe, color, gloss)
+end
+
+-- cylinder along the given axis ("X" | "Y" | "Z")
+local function tube(model, name, length, d, cframe, color, axis)
+	local rot = if axis == "Y" then CFrame.Angles(0, 0, math.pi / 2) elseif axis == "Z" then CFrame.Angles(0, math.pi / 2, 0) else CFrame.new()
+	return part(model, name, Enum.PartType.Cylinder, Vector3.new(length, d, d), cframe * rot, color)
+end
+
+-- Body shapes. Each returns: main body part, front z, eye height, top y, width.
+local BODIES = {}
+
+function BODIES.tall(model, c)
+	local d, h = 2.8, 2.6 -- capsule: tube + two balls
+	local y0 = FEET + d / 2
+	local body = tube(model, "Body", h, d, CFrame.new(0, y0 + h / 2, 0), c, "Y")
+	ball(model, "BodyTop", d, CFrame.new(0, y0 + h, 0), c)
+	ball(model, "BodyBottom", d, CFrame.new(0, y0, 0), c)
+	return body, -d / 2, y0 + h * 0.8, y0 + h + d / 2, d
+end
+
+function BODIES.wide(model, c)
+	local d, w = 3, 1.8 -- bean: two balls + tube along X
+	local y = FEET + d / 2
+	local body = tube(model, "Body", w, d, CFrame.new(0, y, 0), c, "X")
+	ball(model, "BodyLeft", d, CFrame.new(-w / 2, y, 0), c)
+	ball(model, "BodyRight", d, CFrame.new(w / 2, y, 0), c)
+	return body, -d / 2, y + 0.4, y + d / 2, w + d
+end
+
+function BODIES.long(model, c)
+	local d, l = 2.7, 2.6 -- capsule lying along Z
+	local y = FEET + d / 2
+	local body = tube(model, "Body", l, d, CFrame.new(0, y, 0), c, "Z")
+	ball(model, "BodyFront", d, CFrame.new(0, y, -l / 2), c)
+	ball(model, "BodyBack", d, CFrame.new(0, y, l / 2), c)
+	return body, -l / 2 - d / 2, y + 0.3, y + d / 2, d
+end
+
+function BODIES.blob(model, c)
+	local d = 3.8
+	local y = FEET + d / 2
+	local body = ball(model, "Body", d, CFrame.new(0, y, 0), c)
+	return body, -d / 2, y + 0.45, y + d / 2, d
+end
+
+-- Accessories in the accent color, different per shape so silhouettes vary.
+local ACCESSORIES = {}
+
+function ACCESSORIES.tall(model, a, top)
+	ball(model, "Hat", 2.2, CFrame.new(0, top - 0.3, 0), a) -- beanie
+	ball(model, "Pompom", 0.9, CFrame.new(0, top + 0.9, 0), Color3.new(1, 1, 1))
+	return top + 1.3
+end
+
+function ACCESSORIES.wide(model, a, top, width)
+	for _, x in { -1, 1 } do
+		ball(model, "Ear", 1.2, CFrame.new(x * width * 0.3, top - 0.1, 0.2), a)
+	end
+	return top + 0.5
+end
+
+function ACCESSORIES.long(model, a, top, _, front)
+	ball(model, "Tail", 1.1, CFrame.new(0, top - 1, -front + 0.3), a)
+	part(model, "Fin", Enum.PartType.Block, Vector3.new(0.3, 1.4, 1.6), CFrame.new(0, top + 0.4, 0.3) * CFrame.Angles(math.rad(-20), 0, 0), a)
+	return top + 1.1
+end
+
+function ACCESSORIES.blob(model, a, top)
+	tube(model, "Antenna", 1.4, 0.25, CFrame.new(0, top + 0.6, 0), a, "Y")
+	ball(model, "AntennaBall", 0.8, CFrame.new(0, top + 1.4, 0), a)
+	return top + 1.8
+end
+
+local function face(model, front, eyeY, width)
+	local spread = math.min(width * 0.2, 0.75)
+	for i, x in { -spread, spread } do
+		local eye = if i == 1 then 1.05 else 1.25 -- slightly mismatched, on purpose
+		local z = front + 0.15
+		ball(model, "Eye", eye, CFrame.new(x, eyeY, z), Color3.new(1, 1, 1), 0.1)
+		ball(model, "Pupil", eye * 0.5, CFrame.new(x + (if i == 1 then 0.08 else -0.08), eyeY - 0.08, z - eye * 0.36), Color3.fromRGB(20, 15, 30), 0.2)
+		ball(model, "Shine", eye * 0.18, CFrame.new(x + 0.12, eyeY + 0.12, z - eye * 0.5), Color3.new(1, 1, 1), 0)
+		ball(model, "Cheek", 0.55, CFrame.new(x * 1.7, eyeY - 0.7, front + 0.25), Color3.fromRGB(255, 140, 170), 0).Transparency = 0.25
+	end
+	part(model, "Mouth", Enum.PartType.Block, Vector3.new(0.7, 0.18, 0.15), CFrame.new(0, eyeY - 0.75, front + 0.05), Color3.fromRGB(60, 25, 40))
+end
+
 local function placeholder(def)
 	local model = Instance.new("Model")
-	local size = SHAPES[def.shape] or SHAPES.blob
-	local feet = 0.8
-	local body = part(model, {
-		Name = "Body",
-		Size = size,
-		CFrame = CFrame.new(0, feet + size.Y / 2, 0),
-		Color = def.colors[1],
-	})
-	local top = feet + size.Y
-
-	part(model, {
-		Name = "Accent",
-		Size = Vector3.new(size.X * 0.7, 0.8, size.Z * 0.7),
-		CFrame = CFrame.new(0, top + 0.4, 0),
-		Color = def.colors[2],
-	})
-	for _, x in { -size.X * 0.25, size.X * 0.25 } do
-		part(model, {
-			Name = "Foot",
-			Size = Vector3.new(1, feet, 1.2),
-			CFrame = CFrame.new(x, feet / 2, -0.2),
-			Color = def.colors[2]:Lerp(Color3.new(0, 0, 0), 0.3),
-		})
+	local shape = if BODIES[def.shape] then def.shape else "blob"
+	local main, accent = def.colors[1], def.colors[2]
+	local body, front, eyeY, top, width = BODIES[shape](model, main)
+	local hatTop = ACCESSORIES[shape](model, accent, top, width, front)
+	face(model, front, eyeY, width)
+	-- little feet
+	for _, x in { -0.65, 0.65 } do
+		ball(model, "Foot", 1.1, CFrame.new(x, FEET * 0.55, -0.3), accent:Lerp(Color3.new(0, 0, 0), 0.25))
 	end
-
-	-- googly eyes on the front (-Z), slightly mismatched on purpose
-	local front = -size.Z / 2
-	local eyeY = feet + size.Y * 0.68
-	for i, x in { -size.X * 0.2, size.X * 0.2 } do
-		local eyeSize = if i == 1 then 1.1 else 1.3
-		part(model, {
-			Name = "Eye",
-			Shape = Enum.PartType.Ball,
-			Size = Vector3.one * eyeSize,
-			CFrame = CFrame.new(x, eyeY, front - 0.15),
-			Color = Color3.new(1, 1, 1),
-		})
-		part(model, {
-			Name = "Pupil",
-			Shape = Enum.PartType.Ball,
-			Size = Vector3.one * eyeSize * 0.45,
-			CFrame = CFrame.new(x + (if i == 1 then 0.1 else -0.1), eyeY - 0.1, front - 0.15 - eyeSize * 0.4),
-			Color = Color3.new(0, 0, 0),
-		})
-	end
+	-- the brick nod: one stud on top
+	tube(model, "Stud", 0.35, 0.7, CFrame.new(0, hatTop, 0), accent:Lerp(Color3.new(1, 1, 1), 0.3), "Y")
 
 	model.PrimaryPart = body
 	model.WorldPivot = CFrame.new(0, 0, 0)

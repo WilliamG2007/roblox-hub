@@ -22,7 +22,7 @@ local state = { phase = "Day", endsAt = 0, night = 0, boss = false }
 
 local LOOKS = {
 	Day = {
-		lighting = { ClockTime = 14, Brightness = 3, Ambient = Color3.fromRGB(120, 120, 130), OutdoorAmbient = Color3.fromRGB(150, 150, 160) },
+		lighting = { ClockTime = 14, Brightness = 2.6, Ambient = Color3.fromRGB(125, 120, 140), OutdoorAmbient = Color3.fromRGB(150, 150, 170) },
 		tint = Color3.fromRGB(255, 255, 255),
 	},
 	Night = {

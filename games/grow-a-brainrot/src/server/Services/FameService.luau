@@ -6,6 +6,7 @@ local MessagingService = game:GetService("MessagingService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
+local Style = require(ReplicatedStorage.Shared.Style)
 
 local FameService = {}
 
@@ -26,14 +27,20 @@ local function render()
 end
 
 local function buildBoard()
-	local board = Instance.new("Part")
+	local P = Style.Palette
+	local root = services.MapService.Root
+	local cf = CFrame.new(0, 14, -16) * CFrame.Angles(0, math.pi, 0) -- front faces the spawn
+	-- gold frame behind a deep purple board, on two posts, with floating stars
+	Style.roundedBox(root, Vector3.new(36, 20, 0.8), cf * CFrame.new(0, 0, 0.6), P.Gold, 2.5)
+	local board = Style.roundedBox(root, Vector3.new(34, 18, 1), cf, Color3.fromRGB(45, 35, 95), 2)
 	board.Name = "WallOfFame"
-	board.Anchored = true
-	board.Size = Vector3.new(34, 18, 1)
-	board.CFrame = CFrame.new(0, 14, -16) * CFrame.Angles(0, math.pi, 0)
-	board.Color = Color3.fromRGB(35, 30, 70)
-	board.Material = Enum.Material.SmoothPlastic
-	board.Parent = services.MapService.Root
+	for _, x in { -12, 12 } do
+		Style.cylinder(root, 5, 1.4, cf * CFrame.new(x, -14, 0.6), P.WoodDark)
+	end
+	for i, x in { -15, 15 } do
+		local star = Style.part(root, { Size = Vector3.new(2.4, 2.4, 0.8), CFrame = cf * CFrame.new(x, 11.5, 0) * CFrame.Angles(0, 0, math.rad(45)), Color = P.Gold, Material = Enum.Material.Neon, CanCollide = false })
+		Style.float(star, 0.5, 1.6, i)
+	end
 
 	local gui = Instance.new("SurfaceGui")
 	gui.Face = Enum.NormalId.Front

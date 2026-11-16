@@ -57,12 +57,31 @@ local function addSprout(tile)
 	stem.Parent = model
 	local mutation = Mutations.byId[tile:GetAttribute("Mutation") or "Normal"]
 	local mutated = mutation and mutation.id ~= "Normal"
-	local pod = part({ Name = "Pod", Shape = Enum.PartType.Ball, Size = Vector3.one, Color = if mutated then mutation.color else def.colors[1], Material = if mutated then Enum.Material.Neon else Enum.Material.Plastic })
+	local pod = part({ Name = "Pod", Shape = Enum.PartType.Ball, Size = Vector3.one, Color = if mutated then mutation.color else def.colors[1], Material = if mutated then Enum.Material.Neon else Enum.Material.SmoothPlastic, Reflectance = 0.08 })
 	pod.Parent = model
+	local leaves = {}
+	for _, side in { -1, 1 } do
+		local leaf = part({ Name = "Leaf", Size = Vector3.new(1.2, 0.2, 0.6), Color = Color3.fromRGB(110, 220, 90) })
+		leaf.Parent = model
+		table.insert(leaves, { part = leaf, side = side })
+	end
+	-- sparkles switch on when it's about to pop
+	local sparkles = Kit.new("ParticleEmitter", {
+		Enabled = false,
+		Rate = 12,
+		Lifetime = NumberRange.new(0.5, 1),
+		Speed = NumberRange.new(1, 3),
+		SpreadAngle = Vector2.new(180, 180),
+		Size = NumberSequence.new(0.3, 0),
+		LightEmission = 1,
+		Color = ColorSequence.new(if mutated then mutation.color else rarity.color),
+		Parent = pod,
+	})
 
 	local bar = Kit.new("BillboardGui", { Size = UDim2.fromOffset(120, 34), StudsOffsetWorldSpace = Vector3.new(0, 6, 0), MaxDistance = 90, LightInfluence = 0, Adornee = mound, Parent = model })
-	local back = Kit.new("Frame", { Position = UDim2.fromOffset(0, 18), Size = UDim2.new(1, 0, 0, 14), BackgroundColor3 = Color3.fromRGB(30, 30, 40), Parent = bar })
+	local back = Kit.new("Frame", { Position = UDim2.fromOffset(0, 18), Size = UDim2.new(1, 0, 0, 14), BackgroundColor3 = Kit.Theme.PanelDark, Parent = bar })
 	Kit.corner(back, 7)
+	Kit.stroke(back, Kit.Theme.Outline, 2)
 	local fill = Kit.new("Frame", { Size = UDim2.fromScale(0, 1), BackgroundColor3 = rarity.color, Parent = back })
 	Kit.corner(fill, 7)
 	local label = Kit.label({ Size = UDim2.new(1, 0, 0, 18), Text = "", TextScaled = true, TextStrokeTransparency = 0, Parent = bar })
@@ -74,18 +93,57 @@ local function addSprout(tile)
 		pod = pod,
 		fill = fill,
 		label = label,
+		leaves = leaves,
+		sparkles = sparkles,
 		top = top,
 		plantedAt = tile:GetAttribute("PlantedAt"),
 		growTime = tile:GetAttribute("GrowTime"),
 	}
 end
 
+local pedestals = {} -- [tile] = Model
+
+local function removePedestal(tile)
+	if pedestals[tile] then
+		pedestals[tile]:Destroy()
+		pedestals[tile] = nil
+	end
+end
+
+-- rarity-colored stand under a grown brainrot
+local function addPedestal(tile)
+	removePedestal(tile)
+	local def = Brainrots.byId[tile:GetAttribute("PlantId")]
+	if not def then
+		return
+	end
+	local rarity = Rarities.byName[def.rarity]
+	local model = Instance.new("Model")
+	model.Name = "Pedestal"
+	local top = tile.CFrame * CFrame.new(0, tile.Size.Y / 2, 0)
+	local function disc(height, diameter, y, color, material)
+		local p = part({ Shape = Enum.PartType.Cylinder, Size = Vector3.new(height, diameter, diameter), CFrame = top * CFrame.new(0, y, 0) * CFrame.Angles(0, 0, math.pi / 2), Color = color, Material = material or Enum.Material.SmoothPlastic, Reflectance = 0.08 })
+		p.Parent = model
+		return p
+	end
+	disc(0.2, 5.6, 0.05, Color3.fromRGB(250, 250, 255))
+	disc(0.12, 5, 0.2, rarity.color, if rarity.order >= 4 then Enum.Material.Neon else nil)
+	model.Parent = folder
+	pedestals[tile] = model
+end
+
 local function watchTile(tile)
 	local function update()
-		if tile:GetAttribute("State") == "growing" then
+		local state = tile:GetAttribute("State")
+		if state == "growing" then
 			addSprout(tile)
 		else
 			removeSprout(tile)
+		end
+		if state == "grown" then
+			addPedestal(tile)
+		else
+			removePedestal(tile)
 		end
 	end
 	tile:GetAttributeChangedSignal("State"):Connect(update)
@@ -135,6 +193,12 @@ function GrowthController.start()
 			s.pod.Size = Vector3.one * podSize
 			s.pod.CFrame = s.top * CFrame.new(0, height + podSize / 2 - 0.2, 0) * CFrame.Angles(0, 0, wiggle)
 			s.fill.Size = UDim2.fromScale(progress, 1)
+			s.sparkles.Enabled = progress > 0.8
+			local leafSize = 0.4 + progress * 1.1
+			for _, leaf in s.leaves do
+				leaf.part.Size = Vector3.new(leafSize, 0.2, leafSize * 0.5)
+				leaf.part.CFrame = s.top * CFrame.new(leaf.side * leafSize * 0.45, height * 0.45, 0) * CFrame.Angles(0, 0, leaf.side * math.rad(25) + math.sin(t * 2 + leaf.side) * 0.08)
+			end
 			if updateText then
 				local left = s.plantedAt + s.growTime - now
 				s.label.Text = if left > 0 then string.format("%d%%  ·  %s", math.floor(progress * 100), Format.time(left)) else "POP!"
