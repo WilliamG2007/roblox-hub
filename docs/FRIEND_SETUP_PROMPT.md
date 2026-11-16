@@ -1,6 +1,6 @@
 # Setup prompt for a new collaborator's Claude
 
-Send this whole file to your friend. They paste everything below the line into Claude Code (desktop app → Code tab, or the `claude` CLI), after replacing https://github.com/WilliamG2007/roblox-hub with the GitHub link.
+Send this whole file to your friend. They paste everything below the line into Claude Code (desktop app → Code tab, or the `claude` CLI). The repo link is already filled in.
 
 ---
 
