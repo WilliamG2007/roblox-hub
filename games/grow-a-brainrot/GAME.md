@@ -41,10 +41,18 @@ buy seeds → plant → watch them grow  ──►   monsters raid gardens
 - Each player gets a plot: a starting 3×4 grid of planting tiles. Buy more rows with cash, up to 6×8.
 - Grown brainrots stand on their tile, bob around, and show a floating "+$" over their head.
 
-### 2. Seed shop
-- Restocks every **5 minutes** (a real, server-synced timer, never fake).
-- Each restock rolls 4–6 seed types from rarity weights. Show the odds in the shop: it's good practice and builds trust.
-- Bought with **Cash** (in-game). Night seeds cost **Moon Shards**.
+### 2. Pack shop (built in M1.5)
+- Players buy **seed packs**, not seeds. Opening one plays **two spins back to back**: a reel lands on the brainrot, then a slot machine rolls its mutation. The seed already "knows" both; the pop only rolls size.
+- **10 pack tiers** (`Config/Packs.luau`): Basic Bag $25 → Rizz → Sigma → Aura → Mewing → Ohio → Gigachad → Tralala → 67 Pack → Cosmic Brainrot Pack $100M. Each tier costs about 6–8× the last while expected income grows a bit slower, so payback stretches from seconds to about 20+ minutes. Higher tiers also have better mutation luck and are rarer in stock.
+- Stock restocks every **5 minutes** (a real, server-synced timer), with per-player quantities. Open x1 or x10.
+- **Pity:** each pack guarantees its pity rarity after N opens without it (shown as a bar on the card).
+- **Odds & Pity** page per pack shows rarity, per-brainrot and mutation chances, live-updated during luck events (`shared/Odds.luau` is used by both the UI and the server roll).
+- Night-only packs bought with **Moon Shards** come with M3.
+
+### Luck, admin events, fame (built in M1.5)
+- **Server luck events** every 15–25 min: LUCK STORM (x2 luck), 67 SECONDS OF CHAOS (x6.7 mutations), BRAINROT FRENZY. Luck boosts higher rarity tiers' weights.
+- **Admin chat commands** (creator, `Config.Game.Admins`, everyone in Studio): `/luck`, `/mutluck`, `/givepack <1-10|name> <count>` (free packs for the whole server), `/restock`, `/cash`.
+- **Pull announcements:** Legendary+ or Rainbow+ pulls are announced to the server and go on the **Wall of Fame** board in the plaza. Secrets and 67 mutations are announced to **every server** via MessagingService.
 
 ### 3. Growing
 - Stages: seed → sprout → wiggling pod → **POP** (the brainrot bursts out with confetti, a sound and a screen bump).
@@ -54,15 +62,17 @@ buy seeds → plant → watch them grow  ──►   monsters raid gardens
 ### 4. Brainrots (the real Italian brainrot roster)
 Decision (Nov 2026): use the real meme names and looks. Known risk: trademark claims exist (Mementum Lab and others) and are being fought in court (Spyder Games v. Mementum, trial Nov 2027); a Rights Manager takedown is possible. **Verity is excluded** (a human-made character with real copyright, actively licensed by its creator). "67" is fine as a number/monster; no Skrilla audio.
 
+27 brainrots in `Config/Brainrots.luau` (the source of truth):
+
 | Rarity | Brainrots | Earn/sec (base) |
 |---|---|---|
-| Common | Lirilì Larilà, Brr Brr Patapim, Trippi Troppi, Boneca Ambalabu | 1–3 |
-| Uncommon | Chimpanzini Bananini, Bombombini Gusini, Frigo Camelo | 8–15 |
-| Rare | Ballerina Cappuccina, Cappuccino Assassino, Glorbo Fruttodrillo | 40–80 |
-| Epic | Bombardiro Crocodilo, Udin Din Din Dun, Trulimero Trulicina | 250–500 |
-| Legendary | **Tung Tung Tung Sahur**, **Tralalero Tralala** | 2K–4K |
-| Mythic | La Vacca Saturno Saturnita, Strawberry Elephant | 15K–30K |
-| Secret | **Lil 67** (a tiny friendly 67, drops from the 67 boss), Moonlit Tung Tung | 100K+ |
+| Common | Lirilì Larilà, Brr Brr Patapim, Trippi Troppi, Boneca Ambalabu | 1–4 |
+| Uncommon | Chimpanzini Bananini, Bombombini Gusini, Ta Ta Ta Ta Sahur, Frigo Camelo | 10–18 |
+| Rare | Ballerina Cappuccina, Cappuccino Assassino, Bobrito Bandito, Glorbo Fruttodrillo | 45–85 |
+| Epic | Bombardiro Crocodilo, Udin Din Din Dun, Tric Trac Baraboom, Orangutini Ananassini, Trulimero Trulicina | 280–550 |
+| Legendary | **Tung Tung Tung Sahur**, Brri Brri Bicus Dicus Bombicus, Cocofanto Elefanto, **Tralalero Tralala** | 2K–3.5K |
+| Mythic | La Vacca Saturno Saturnita, Graipussi Medussi, Strawberry Elephant | 15K–25K |
+| Secret | Los Tralaleritos, Pot Hotspot, **Lil 67** | 100K–200K |
 
 The most famous characters are deliberately at the top rarities: those are the "I GOT TUNG TUNG!!" clip moments.
 
@@ -80,16 +90,17 @@ Each has a **power** stat (defense at night) and a **value** (sell price). Selli
 - **Moonlit:** anything that finishes growing at night has a 1-in-10 chance to become **Moonlit** (glowing).
 
 ### 6. Mutations (value multipliers)
-| Mutation | How | Multiplier |
-|---|---|---|
-| Gold | 1/50 on any pop | ×5 |
-| Rainbow | 1/300 | ×20 |
-| Moonlit | grew at night, 1/10 | ×3 |
-| Saucy | during Pasta Rain weather | ×4 |
-| Zapped | during Thunderstorm | ×6 |
-| **Sixty-Seven** | during the 67 Meteor Shower event | **×67** |
+Rolled at pack open (`Config/Mutations.luau`), boosted by pack mutation luck × server mutation luck:
 
-Mutations stack multiplicatively, so a Gold Moonlit is ×15. Rare stacks trigger server-wide announcements.
+| Mutation | Base chance | Multiplier |
+|---|---|---|
+| Gold | 6% | ×3 |
+| Diamond | 2.5% | ×6 |
+| Rainbow | 0.8% | ×12 |
+| Galaxy | 0.2% | ×30 |
+| **67** | 0.067% | **×67** |
+
+Planned for later (M3/M4): Moonlit (grew at night), weather mutations (Saucy, Zapped), and stacking.
 
 ### 7. Weather events (server-wide hype)
 Random, about every 15–25 min, lasting 2–3 min: **Pasta Rain**, **Thunderstorm**, **67 Meteor Shower** (rare). Each has a banner, music swap, particles, and its own mutation.
@@ -154,12 +165,12 @@ Random, about every 15–25 min, lasting 2–3 min: **Pasta Rain**, **Thundersto
 
 ---
 
-## Code map (M1)
+## Code map (M1 + M1.5)
 - `shared/Config/`: `Game` (tuning), `Rarities`, `Brainrots` (roster). Balance changes go here.
 - `shared/BrainrotModels`: builds a brainrot model; uses `ReplicatedStorage.Assets.Brainrots.<id>` if real art exists, otherwise a placeholder.
-- `shared/Remotes`, `shared/Format`.
-- `server/Services/`: `DataService` (save + session lock), `EconomyService` (cash), `SyncService` (state to client), `MapService` (world), `PlotService` (gardens), `ShopService` (stock/restock/buy), `GardenService` (plant → grow → pop → earn → collect/sell).
-- `client/Controllers/`: `State`, `HudController`, `ShopController`, `PlantController` (hotbar + planting), `GrowthController` (sprout visuals), `EffectsController` (pops, cash popups, toasts). `client/UI/Kit` = shared UI helpers.
+- `shared/Config/Packs`, `shared/Config/Mutations`; `shared/Odds` (all probability math, shared by UI + server); `shared/Seeds` (seed keys `id|mutation`); `shared/Style` (studded bricks); `shared/Remotes`, `shared/Format`.
+- `server/Services/`: `DataService` (save + session lock), `EconomyService` (cash), `SyncService` (state to client), `MapService` (world), `PlotService` (gardens), `ShopService` (pack stock, buying, rolls, pity), `GardenService` (plant → grow → pop → earn → collect/sell), `LuckService` (server luck events), `FameService` (announcements, Wall of Fame, cross-server pulls), `AdminService` (chat commands).
+- `client/Controllers/`: `State`, `HudController`, `ShopController`, `PlantController` (hotbar + planting), `GrowthController` (sprout visuals), `EffectsController` (pops, cash popups, toasts), `PackRevealController` (reel + mutation slot, 10x flips), `MutationFxController` (rainbow animation). `client/UI/Kit` = shared UI helpers.
 - New system = new Service/Controller file + one line in `Main.server.luau` / `Main.client.luau`.
 
 ## Build milestones
@@ -179,7 +190,7 @@ Random, about every 15–25 min, lasting 2–3 min: **Pasta Rain**, **Thundersto
 - After launch: a **weekly update on the same day** with a lobby countdown, plus an admin-abuse style live event right before each update.
 
 ## First updates (after launch)
-Fusion (deterministic recipes), new night bosses each update (trend monsters as original homages), season pass (~299), trading (PolicyService-gated), optional light raiding at night, codes + holiday event seeds.
+Shovel stealing (backlog: preferably a free night mechanic with protection rather than a paid steal pass), fusion (deterministic recipes), new night bosses each update (trend monsters as original homages), season pass (~299), trading (PolicyService-gated), optional light raiding at night, codes + holiday event seeds.
 
 ## Owners
 - TBD: split by system once your friend is set up (suggestion: one person on garden/economy/shop, the other on night/monsters/effects).

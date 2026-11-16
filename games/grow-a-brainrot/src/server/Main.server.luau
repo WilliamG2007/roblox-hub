@@ -8,7 +8,10 @@ local Remotes = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("R
 Remotes.setup()
 
 -- order matters: init runs top to bottom, then start runs top to bottom
-local ORDER = { "DataService", "MapService", "EconomyService", "SyncService", "PlotService", "ShopService", "GardenService" }
+local ORDER = {
+	"DataService", "MapService", "EconomyService", "SyncService", "PlotService",
+	"LuckService", "FameService", "ShopService", "GardenService", "AdminService",
+}
 
 local services = {}
 for _, name in ORDER do

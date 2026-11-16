@@ -1,7 +1,10 @@
 -- Client entry point: starts each controller in ./Controllers.
 -- Each controller exposes start(controllers) and may call into the others.
 
-local ORDER = { "State", "EffectsController", "HudController", "ShopController", "PlantController", "GrowthController" }
+local ORDER = {
+	"State", "EffectsController", "HudController", "ShopController", "PackRevealController",
+	"PlantController", "GrowthController", "MutationFxController",
+}
 
 local controllers = {}
 for _, name in ORDER do

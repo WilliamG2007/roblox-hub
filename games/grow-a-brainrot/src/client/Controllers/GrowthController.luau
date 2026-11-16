@@ -7,6 +7,7 @@ local RunService = game:GetService("RunService")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Brainrots = require(Shared.Config.Brainrots)
 local Rarities = require(Shared.Config.Rarities)
+local Mutations = require(Shared.Config.Mutations)
 local Format = require(Shared.Format)
 local Kit = require(script.Parent.Parent.UI.Kit)
 
@@ -54,7 +55,9 @@ local function addSprout(tile)
 	mound.Parent = model
 	local stem = part({ Name = "Stem", Size = Vector3.new(0.4, 1, 0.4), Color = Color3.fromRGB(80, 200, 70) })
 	stem.Parent = model
-	local pod = part({ Name = "Pod", Shape = Enum.PartType.Ball, Size = Vector3.one, Color = def.colors[1], Material = Enum.Material.SmoothPlastic })
+	local mutation = Mutations.byId[tile:GetAttribute("Mutation") or "Normal"]
+	local mutated = mutation and mutation.id ~= "Normal"
+	local pod = part({ Name = "Pod", Shape = Enum.PartType.Ball, Size = Vector3.one, Color = if mutated then mutation.color else def.colors[1], Material = if mutated then Enum.Material.Neon else Enum.Material.Plastic })
 	pod.Parent = model
 
 	local bar = Kit.new("BillboardGui", { Size = UDim2.fromOffset(120, 34), StudsOffsetWorldSpace = Vector3.new(0, 6, 0), MaxDistance = 90, LightInfluence = 0, Adornee = mound, Parent = model })

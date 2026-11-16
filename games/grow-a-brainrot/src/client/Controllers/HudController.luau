@@ -22,6 +22,7 @@ function HudController.start(controllers)
 	local cashLabel = Kit.label({ Size = UDim2.new(1, 0, 0, 64), Text = "$0", TextSize = 60, TextColor3 = Kit.Theme.Cash, TextStrokeTransparency = 0, Parent = top })
 	Kit.new("UIStroke", { Thickness = 3, Color = Color3.fromRGB(20, 60, 25), Parent = cashLabel })
 	local incomeLabel = Kit.label({ Position = UDim2.fromOffset(0, 62), Size = UDim2.new(1, 0, 0, 28), Text = "+$0/s", TextSize = 26, Parent = top })
+	local luckBanner = Kit.label({ Position = UDim2.fromOffset(-100, 94), Size = UDim2.new(1, 200, 0, 30), Text = "", TextSize = 28, TextColor3 = Kit.Theme.Accent, TextStrokeTransparency = 0, Visible = false, Parent = top })
 
 	local holder = Kit.autoScale(Kit.new("Frame", {
 		AnchorPoint = Vector2.new(0, 0.5),
@@ -55,7 +56,19 @@ function HudController.start(controllers)
 		end
 		cashLabel.Text = Format.cash(shown)
 		incomeLabel.Text = "+" .. Format.cash(data.income) .. "/s"
-		restockLabel.Text = "Restock " .. Format.time(data.shop.endsAt - workspace:GetServerTimeNow())
+		local now = workspace:GetServerTimeNow()
+		restockLabel.Text = "Restock " .. Format.time(data.shop.endsAt - now)
+
+		local luckEnds = ReplicatedStorage:GetAttribute("LuckEndsAt") or 0
+		luckBanner.Visible = luckEnds > now
+		if luckBanner.Visible then
+			luckBanner.Text = string.format("%s  ·  x%s luck  ·  x%s mutations  ·  %s",
+				ReplicatedStorage:GetAttribute("LuckEventName") or "LUCK",
+				tostring(ReplicatedStorage:GetAttribute("Luck") or 1),
+				tostring(ReplicatedStorage:GetAttribute("MutationLuck") or 1),
+				Format.time(luckEnds - now))
+			luckBanner.TextTransparency = 0.15 + 0.15 * math.sin(os.clock() * 6)
+		end
 	end)
 end
 

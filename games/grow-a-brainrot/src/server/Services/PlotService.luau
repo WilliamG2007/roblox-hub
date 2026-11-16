@@ -4,6 +4,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local GameConfig = require(ReplicatedStorage.Shared.Config.Game)
+local Style = require(ReplicatedStorage.Shared.Style)
 
 local PlotService = {}
 
@@ -31,7 +32,7 @@ local function part(parent, props)
 	p.Anchored = true
 	p.TopSurface = Enum.SurfaceType.Smooth
 	p.BottomSurface = Enum.SurfaceType.Smooth
-	p.Material = Enum.Material.SmoothPlastic
+	Style.brick(p)
 	for key, value in props do
 		p[key] = value
 	end
@@ -71,7 +72,7 @@ local function buildPlot(index, position, parent)
 	plot.Name = "Plot" .. index
 	plot.ModelStreamingMode = Enum.ModelStreamingMode.Persistent
 
-	local floor = part(plot, { Name = "Floor", Size = Vector3.new(width, 1, depth), CFrame = base, Color = Color3.fromRGB(130, 215, 110), Material = Enum.Material.Grass })
+	local floor = part(plot, { Name = "Floor", Size = Vector3.new(width, 1, depth), CFrame = base, Color = Color3.fromRGB(130, 215, 110) })
 	-- colored rim
 	for _, side in { { 0, depth / 2, width, 1 }, { 0, -depth / 2, width, 1 }, { width / 2, 0, 1, depth }, { -width / 2, 0, 1, depth } } do
 		part(plot, { Name = "Rim", Size = Vector3.new(side[3], 1.6, side[4]), CFrame = base * CFrame.new(side[1], 0.8, side[2]), Color = color })
@@ -87,7 +88,6 @@ local function buildPlot(index, position, parent)
 				Size = Vector3.new(T - 1, 0.6, T - 1),
 				CFrame = base * CFrame.new(x, 0.8, z),
 				Color = Color3.fromRGB(125, 85, 55),
-				Material = Enum.Material.Ground,
 			})
 			tile:SetAttribute("TileIndex", i)
 		end

@@ -1,13 +1,13 @@
 -- All RemoteEvents in one place. Server calls setup(); both sides use get(name).
 --   State  server -> client  full player state snapshot
 --   Fx     server -> client  one-shot events (pops, toasts, collects...)
---   Plant  client -> server  (tileIndex, brainrotId)
---   Buy    client -> server  (brainrotId)
+--   Plant    client -> server  (tileIndex, seedKey)
+--   BuyPack  client -> server  (packId, count)
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
-local NAMES = { "State", "Fx", "Plant", "Buy" }
+local NAMES = { "State", "Fx", "Plant", "BuyPack" }
 local FOLDER_NAME = "Remotes"
 
 local Remotes = {}

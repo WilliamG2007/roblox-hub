@@ -7,6 +7,7 @@ local TweenService = game:GetService("TweenService")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Remotes = require(Shared.Remotes)
 local Rarities = require(Shared.Config.Rarities)
+local Mutations = require(Shared.Config.Mutations)
 local Format = require(Shared.Format)
 local Kit = require(script.Parent.Parent.UI.Kit)
 
@@ -128,17 +129,32 @@ function handlers.Planted(position)
 	burst(position, Color3.fromRGB(140, 95, 60), 12, 10)
 end
 
-function handlers.Pop(position, rarityName, ownerId)
+function handlers.Pop(position, rarityName, ownerId, mutationId, size)
 	local rarity = Rarities.byName[rarityName]
-	local mine = ownerId == player.UserId
-	burst(position + Vector3.new(0, 1, 0), rarity.color, if BIG_RARITIES[rarityName] then 60 else 25, 25)
-	if BIG_RARITIES[rarityName] then
-		lightBeam(position, rarity.color)
+	local mutation = Mutations.byId[mutationId or "Normal"]
+	local mutated = mutation and mutation.id ~= "Normal"
+	local color = if mutated then mutation.color else rarity.color
+	local big = BIG_RARITIES[rarityName] or mutated
+	burst(position + Vector3.new(0, 1, 0), color, if big then 60 else 25, 25)
+	if big then
+		lightBeam(position, color)
 	end
-	if mine then
+	if ownerId == player.UserId then
 		Kit.sound(0.5, 1.1 + rarity.order * 0.08)
-		worldPopup(position + Vector3.new(0, 6, 0), string.upper(rarityName) .. "!", rarity.color, 50)
+		local title = (if mutated then string.upper(mutation.name) .. " " else "") .. string.upper(rarityName) .. "!"
+		worldPopup(position + Vector3.new(0, 7, 0), title, color, 50)
+		if size then
+			local sizeColor = if size >= 2 then Color3.fromRGB(255, 120, 60) else Color3.fromRGB(230, 230, 255)
+			task.delay(0.35, function()
+				worldPopup(position + Vector3.new(0, 4, 0), string.format("SIZE %.2fx%s", size, if size >= 2 then "  HUGE!" else ""), sizeColor, 40)
+			end)
+		end
 	end
+end
+
+function handlers.LuckEvent(name, luck, mutationLuck, duration)
+	EffectsController.toast(string.format("%s!  x%s luck, x%s mutations for %ds!", name, tostring(luck), tostring(mutationLuck), duration), Color3.fromRGB(255, 220, 80), 7)
+	Kit.sound(0.7, 0.7)
 end
 
 function handlers.Cash(amount, position, verb)

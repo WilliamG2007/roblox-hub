@@ -31,10 +31,11 @@ local function defaultData()
 	return {
 		version = 1,
 		cash = GameConfig.StartingCash,
-		seeds = deepCopy(GameConfig.StarterSeeds),
-		tiles = {}, -- ["1"] = { id, plantedAt, growTime, state, size?, stored? }
+		seeds = deepCopy(GameConfig.StarterSeeds), -- ["<id>|<mutation>"] = count
+		tiles = {}, -- ["1"] = { id, mutation, plantedAt, growTime, state, size?, stored? }
 		index = {}, -- [brainrotId] = true once grown
-		shop = { window = -1, bought = {} },
+		shop = { stockId = "", bought = {} },
+		pity = {}, -- [packId] = opens since last pity-rarity hit
 		stats = { planted = 0, grown = 0, earned = 0 },
 		lastSave = 0,
 	}
@@ -44,6 +45,13 @@ local function reconcile(data)
 	for key, value in defaultData() do
 		if data[key] == nil then
 			data[key] = value
+		end
+	end
+	-- v1 seeds were keyed by brainrot id only; they become Normal mutation seeds
+	for key, count in table.clone(data.seeds) do
+		if not string.find(key, "|", 1, true) then
+			data.seeds[key] = nil
+			data.seeds[key .. "|Normal"] = (data.seeds[key .. "|Normal"] or 0) + count
 		end
 	end
 	return data

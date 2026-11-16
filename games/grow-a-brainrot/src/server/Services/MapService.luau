@@ -1,6 +1,9 @@
--- Builds the shared world at runtime: bright ground, sky, the central seed shop.
+-- Builds the shared world at runtime: bright ground, sky, the central pack shop.
 
 local Lighting = game:GetService("Lighting")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Style = require(ReplicatedStorage.Shared.Style)
 
 local MapService = {}
 
@@ -12,7 +15,7 @@ local function part(parent, props)
 	p.Anchored = true
 	p.TopSurface = Enum.SurfaceType.Smooth
 	p.BottomSurface = Enum.SurfaceType.Smooth
-	p.Material = Enum.Material.SmoothPlastic
+	Style.brick(p)
 	if props.Shape then
 		p.Shape = props.Shape
 		props.Shape = nil
@@ -84,11 +87,11 @@ local function buildShop(root)
 	for i, color in sackColors do
 		part(stand, { Name = "Sack", Shape = Enum.PartType.Ball, Size = Vector3.one * 2.6, CFrame = CFrame.new(-7 + (i - 1) * 4.7, 6.4, 0), Color = color })
 	end
-	sign(base, "SEED SHOP", UDim2.fromOffset(400, 90), Color3.fromRGB(255, 240, 120)).StudsOffset = Vector3.new(0, 18, 0)
+	sign(base, "PACK SHOP", UDim2.fromOffset(400, 90), Color3.fromRGB(255, 240, 120)).StudsOffset = Vector3.new(0, 18, 0)
 
 	local prompt = Instance.new("ProximityPrompt")
-	prompt.ActionText = "Open Seed Shop"
-	prompt.ObjectText = "Seeds"
+	prompt.ActionText = "Open Pack Shop"
+	prompt.ObjectText = "Seed Packs"
 	prompt.HoldDuration = 0
 	prompt.MaxActivationDistance = 16
 	prompt.RequiresLineOfSight = false
@@ -103,7 +106,7 @@ function MapService.init()
 	setupLighting()
 	local root = Instance.new("Folder")
 	root.Name = "GrowABrainrotWorld"
-	part(root, { Name = "Ground", Size = Vector3.new(420, 1, 340), CFrame = CFrame.new(0, 0, 0), Color = Color3.fromRGB(95, 200, 90), Material = Enum.Material.Grass })
+	part(root, { Name = "Ground", Size = Vector3.new(420, 1, 340), CFrame = CFrame.new(0, 0, 0), Color = Color3.fromRGB(95, 200, 90) })
 	part(root, { Name = "Plaza", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.4, 60, 60), CFrame = CFrame.new(0, 0.6, 0) * CFrame.Angles(0, 0, math.pi / 2), Color = Color3.fromRGB(240, 225, 190) })
 	local stand, prompt = buildShop(root)
 	MapService.ShopStand = stand

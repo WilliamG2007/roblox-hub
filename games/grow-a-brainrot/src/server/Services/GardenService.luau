@@ -3,7 +3,9 @@
 --
 -- Tile state lives in player data (data.tiles["<i>"]) and is mirrored onto the
 -- tile Part as attributes so the client can draw growth visuals:
---   PlantId, PlantedAt (server time), GrowTime, State ("growing" | "grown" | nil)
+--   PlantId, Mutation, PlantedAt (server time), GrowTime, State ("growing" | "grown" | nil)
+-- The brainrot and its mutation are already decided when the pack opens; the
+-- pop only rolls the size.
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -11,7 +13,9 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local GameConfig = require(ReplicatedStorage.Shared.Config.Game)
 local Brainrots = require(ReplicatedStorage.Shared.Config.Brainrots)
 local Rarities = require(ReplicatedStorage.Shared.Config.Rarities)
+local Mutations = require(ReplicatedStorage.Shared.Config.Mutations)
 local BrainrotModels = require(ReplicatedStorage.Shared.BrainrotModels)
+local Seeds = require(ReplicatedStorage.Shared.Seeds)
 local Format = require(ReplicatedStorage.Shared.Format)
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
 
@@ -21,7 +25,7 @@ local services
 local fx
 local sessions = {} -- [Player] = { plot, data, models = { [index] = Model } }
 
-local ANNOUNCE_RARITIES = { Legendary = true, Mythic = true, Secret = true }
+local HUGE_SIZE = 2.3
 
 local function now()
 	return workspace:GetServerTimeNow()
@@ -33,12 +37,17 @@ local function randomSize()
 	return math.floor(size * 100 + 0.5) / 100
 end
 
+local function mutationOf(tile)
+	return Mutations.byId[tile.mutation or "Normal"] or Mutations.byId.Normal
+end
+
 local function incomeOf(tile)
-	return Brainrots.byId[tile.id].income * (tile.size or 1)
+	return Brainrots.byId[tile.id].income * mutationOf(tile).mult * (tile.size or 1)
 end
 
 local function setTileAttributes(tilePart, tile)
 	tilePart:SetAttribute("PlantId", tile and tile.id or nil)
+	tilePart:SetAttribute("Mutation", tile and tile.mutation or nil)
 	tilePart:SetAttribute("PlantedAt", tile and tile.plantedAt or nil)
 	tilePart:SetAttribute("GrowTime", tile and tile.growTime or nil)
 	tilePart:SetAttribute("State", tile and tile.state or nil)
@@ -68,8 +77,10 @@ local function makeBillboard(model, def, tile)
 		l.Parent = gui
 		return l
 	end
+	local mutation = mutationOf(tile)
 	local sizeTag = if tile.size >= 2 then "HUGE " elseif tile.size >= 1.5 then "Big " else ""
-	line("Name", sizeTag .. def.name, rarity.color, 24)
+	local mutationTag = if mutation.id ~= "Normal" then mutation.name .. " " else ""
+	line("Name", mutationTag .. sizeTag .. def.name, if mutation.id ~= "Normal" then mutation.color else rarity.color, 24)
 	line("Rate", Format.cash(incomeOf(tile)) .. "/s", Color3.fromRGB(150, 255, 150), 20)
 	line("Stored", "", Color3.fromRGB(255, 240, 150), 22)
 	gui.Parent = model.PrimaryPart
@@ -79,7 +90,7 @@ end
 local function spawnBrainrot(session, index, tile)
 	local def = Brainrots.byId[tile.id]
 	local tilePart = services.PlotService.getTile(session.plot, index)
-	local model = BrainrotModels.build(tile.id, tile.size)
+	local model = BrainrotModels.build(tile.id, tile.size, tile.mutation)
 	model.Name = "Brainrot" .. index
 	model:PivotTo(tilePart.CFrame * CFrame.new(0, tilePart.Size.Y / 2, 0))
 	makeBillboard(model, def, tile)
@@ -116,38 +127,38 @@ local function grow(session, index, tile)
 	setTileAttributes(tilePart, tile)
 	spawnBrainrot(session, index, tile)
 
-	fx:FireAllClients("Pop", tilePart.Position, def.rarity, session.player.UserId)
+	fx:FireAllClients("Pop", tilePart.Position, def.rarity, session.player.UserId, tile.mutation or "Normal", tile.size)
 	if isNew then
 		fx:FireClient(session.player, "Toast", "NEW BRAINROT DISCOVERED: " .. def.name .. "!", Rarities.byName[def.rarity].color)
 	end
-	if ANNOUNCE_RARITIES[def.rarity] or tile.size >= 2.3 then
-		local sizeTag = if tile.size >= 2.3 then "a HUGE " else "a "
-		fx:FireAllClients("Announce", string.format("%s grew %s%s %s!", session.player.DisplayName, sizeTag, string.upper(def.rarity), def.name), Rarities.byName[def.rarity].color)
+	if tile.size >= HUGE_SIZE then
+		services.FameService.record(string.format("%s grew a HUGE %.1fx %s!", session.player.DisplayName, tile.size, def.name), Rarities.byName[def.rarity].color)
 	end
 	services.SyncService.mark(session.player)
 end
 
-function GardenService.plant(player, index, id)
+function GardenService.plant(player, index, seedKey)
 	local session = sessions[player]
-	if not session or type(index) ~= "number" or type(id) ~= "string" then
+	if not session or type(index) ~= "number" or type(seedKey) ~= "string" then
 		return
 	end
 	index = math.floor(index)
+	local id, mutation = Seeds.parse(seedKey)
 	local def = Brainrots.byId[id]
-	if not def or index < 1 or index > services.PlotService.tileCount() then
+	if not def or not Mutations.byId[mutation] or index < 1 or index > services.PlotService.tileCount() then
 		return
 	end
 	local data = session.data
 	local key = tostring(index)
-	if data.tiles[key] or (data.seeds[id] or 0) < 1 then
+	if data.tiles[key] or (data.seeds[seedKey] or 0) < 1 then
 		return
 	end
 
-	data.seeds[id] -= 1
-	if data.seeds[id] <= 0 then
-		data.seeds[id] = nil
+	data.seeds[seedKey] -= 1
+	if data.seeds[seedKey] <= 0 then
+		data.seeds[seedKey] = nil
 	end
-	local tile = { id = id, plantedAt = now(), growTime = def.growTime, state = "growing" }
+	local tile = { id = id, mutation = mutation, plantedAt = now(), growTime = def.growTime, state = "growing" }
 	data.tiles[key] = tile
 	data.stats.planted += 1
 
@@ -165,7 +176,7 @@ function GardenService.sell(player, index)
 		return
 	end
 	local def = Brainrots.byId[tile.id]
-	local value = def.cost * GameConfig.SellMultiplier * tile.size + (tile.stored or 0)
+	local value = incomeOf(tile) * GameConfig.SellIncomeSeconds + (tile.stored or 0)
 	session.data.tiles[key] = nil
 	local model = session.models[index]
 	if model then
