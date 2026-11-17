@@ -12,6 +12,7 @@ local Mutations = require(Shared.Config.Mutations)
 local Format = require(Shared.Format)
 local Kit = require(script.Parent.Parent.UI.Kit)
 local Sfx = require(script.Parent.Parent.UI.Sfx)
+local Hype = require(script.Parent.Parent.UI.Hype)
 
 local EffectsController = {}
 
@@ -39,8 +40,8 @@ function EffectsController.toast(text: string, color: Color3?, duration: number?
 	local pill = Kit.new("Frame", {
 		Size = UDim2.new(1, 0, 0, 0),
 		AutomaticSize = Enum.AutomaticSize.Y,
-		BackgroundColor3 = Kit.Theme.PanelDark,
-		BackgroundTransparency = 0.05,
+		BackgroundColor3 = Kit.Theme.Panel,
+		BackgroundTransparency = 0,
 		Position = UDim2.fromOffset(0, -20),
 		Parent = holder,
 	})
@@ -255,6 +256,12 @@ function handlers.Pop(position, rarityName, ownerId, mutationId, size)
 		Sfx.play(if big then "pop_rare" else "pop", { pitch = 1 + (rarity.order - 1) * 0.04 })
 		local title = (if mutated then string.upper(mutation.name) .. " " else "") .. string.upper(rarityName) .. "!"
 		worldPopup(position + Vector3.new(0, 7, 0), title, color, 54)
+		local hype = Hype.pick(rarity.order + (if mutated then 1 else 0))
+		if hype then
+			task.delay(0.7, function()
+				worldPopup(position + Vector3.new(0, 10, 0), hype, Color3.fromRGB(255, 225, 60), 58)
+			end)
+		end
 		if size then
 			local huge = size >= 2
 			task.delay(0.35, function()
@@ -288,6 +295,15 @@ function handlers.Burst(position, color)
 	ring(position + Vector3.new(0, 0.3, 0), color, 18, 0.6)
 	lightBeam(position, color)
 	Sfx.playAt("monster_die", position)
+end
+
+-- big happy moment (claiming a garden)
+function handlers.Celebrate(position, color)
+	burst(position + Vector3.new(0, 3, 0), color, 80, 40)
+	ring(position + Vector3.new(0, 1, 0), color, 50, 0.8)
+	lightBeam(position, color)
+	worldPopup(position + Vector3.new(0, 10, 0), "YOUR GARDEN!", color, 70)
+	Sfx.play("unlock")
 end
 
 function handlers.LuckEvent(name, luck, mutationLuck, duration)

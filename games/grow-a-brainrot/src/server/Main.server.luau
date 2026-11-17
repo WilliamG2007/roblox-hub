@@ -31,6 +31,13 @@ end
 
 local fx = Remotes.get("Fx")
 
+services.PlotService.Claimed:Connect(function(player, plot)
+	services.GardenService.loadPlayer(player, services.DataService.get(player), plot)
+	services.SyncService.mark(player)
+	fx:FireClient(player, "Toast", "This garden is yours! Open the PACK SHOP to get seeds.", Color3.fromRGB(150, 255, 150))
+	fx:FireClient(player, "Celebrate", plot:GetPivot().Position, Color3.fromRGB(255, 215, 80))
+end)
+
 local function onPlayerAdded(player)
 	local leaderstats = Instance.new("Folder")
 	leaderstats.Name = "leaderstats"
@@ -46,18 +53,25 @@ local function onPlayerAdded(player)
 		return
 	end
 
-	local plot = services.PlotService.claim(player)
-	services.GardenService.loadPlayer(player, data, plot)
+	-- no auto-assign: the player walks to an empty garden and claims it
 	services.SyncService.mark(player)
+	task.delay(2, function()
+		if not player.Parent or services.PlotService.getPlot(player) then
+			return
+		end
+		if services.PlotService.hasFreePlot() then
+			fx:FireClient(player, "Toast", "Pick a garden! Walk up to any empty plot and claim it.", Color3.fromRGB(255, 215, 80))
+		else
+			fx:FireClient(player, "Toast", "All gardens are taken in this server! Try another server.", Color3.fromRGB(255, 120, 120))
+		end
+	end)
 
+	-- after respawning, go back to your own garden (once you have one)
 	player.CharacterAdded:Connect(function(character)
 		character:WaitForChild("HumanoidRootPart", 5)
 		task.wait(0.1)
 		services.PlotService.sendHome(player)
 	end)
-	if player.Character then
-		services.PlotService.sendHome(player)
-	end
 
 	if not canSave then
 		task.delay(4, function()

@@ -108,10 +108,7 @@ end
 
 local function buildCard(item)
 	local pack = Packs.byId[item.id]
-	local frame = Kit.new("Frame", { Size = UDim2.new(1, -12, 0, 112), BackgroundColor3 = Kit.Theme.PanelLight, LayoutOrder = pack.order, Parent = list })
-	Kit.corner(frame, 16)
-	Kit.stroke(frame, Kit.Theme.Outline, 3)
-	Kit.gloss(frame, 0.2)
+	local frame = Kit.card({ Size = UDim2.new(1, -12, 0, 112), LayoutOrder = pack.order, Parent = list })
 	-- colored edge in the pack's color
 	local edge = Kit.new("Frame", { Size = UDim2.new(0, 10, 1, 0), BackgroundColor3 = pack.color, BorderSizePixel = 0, Parent = frame })
 	Kit.corner(edge, 16)
@@ -127,10 +124,10 @@ local function buildCard(item)
 	Kit.label({ Position = UDim2.fromOffset(104, 8), Size = UDim2.new(1, -350, 0, 30), Text = pack.name, TextSize = 28, TextColor3 = pack.color, TextXAlignment = Enum.TextXAlignment.Left, TextTruncate = Enum.TextTruncate.AtEnd, Parent = frame })
 	local shardPack = pack.currency == "shards"
 	local price = Kit.label({ Position = UDim2.fromOffset(104, 40), Size = UDim2.new(1, -350, 0, 26), Text = if shardPack then pack.price .. " Moon Shards" else Format.cash(pack.price), TextSize = 24, TextColor3 = if shardPack then Kit.Theme.Shards else Kit.Theme.Cash, TextXAlignment = Enum.TextXAlignment.Left, Parent = frame })
-	local stock = Kit.label({ Position = UDim2.fromOffset(104, 68), Size = UDim2.new(1, -350, 0, 16), Text = "", Font = Kit.Theme.Body, TextSize = 13, TextColor3 = Color3.fromRGB(215, 215, 235), TextXAlignment = Enum.TextXAlignment.Left, Outline = false, Parent = frame })
+	local stock = Kit.label({ Position = UDim2.fromOffset(104, 68), Size = UDim2.new(1, -350, 0, 16), Text = "", Font = Kit.Theme.Body, TextSize = 13, TextColor3 = Kit.Theme.TextMuted, TextXAlignment = Enum.TextXAlignment.Left, Outline = false, Parent = frame })
 
 	-- pity bar
-	local pityBack = Kit.new("Frame", { Position = UDim2.fromOffset(104, 88), Size = UDim2.new(1, -350, 0, 12), BackgroundColor3 = Kit.Theme.PanelDark, Parent = frame })
+	local pityBack = Kit.new("Frame", { Position = UDim2.fromOffset(104, 88), Size = UDim2.new(1, -350, 0, 12), BackgroundColor3 = Kit.Theme.PanelInset, Parent = frame })
 	Kit.corner(pityBack, 6)
 	Kit.stroke(pityBack, Kit.Theme.Outline, 2)
 	local pityFill = Kit.new("Frame", { Size = UDim2.fromScale(0, 1), BackgroundColor3 = Rarities.byName[pack.pity.rarity].color, Parent = pityBack })

@@ -1,15 +1,18 @@
--- HUD: cash pill (rolls up + pulses), income, Moon Shards, day/night badge,
--- luck banner, and the big menu buttons (SHOP / BAG).
+-- HUD (left stack): cash pill + income chip, Moon Shards, day/night chip,
+-- chunky menu buttons (Shop / Bag / Home), luck banner, claim-a-garden banner.
 
+local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local TweenService = game:GetService("TweenService")
 
 local Format = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Format"))
 local Kit = require(script.Parent.Parent.UI.Kit)
+local Sfx = require(script.Parent.Parent.UI.Sfx)
 
 local HudController = {}
 
+local player = Players.LocalPlayer
 local cashIcon
 local cashPulse
 
@@ -25,71 +28,104 @@ end
 function HudController.pulseCash()
 	if cashPulse then
 		cashPulse.Scale = 1.12
-		TweenService:Create(cashPulse, TweenInfo.new(0.25, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+		TweenService:Create(cashPulse, TweenInfo.new(0.3, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
 	end
 end
 
-local function menuButton(parent, text, color, order, onClick)
-	local holder = Kit.new("Frame", { Size = UDim2.fromOffset(120, 84), BackgroundTransparency = 1, LayoutOrder = order, Parent = parent })
-	local button = Kit.button({ Size = UDim2.fromScale(1, 1), Text = "", BackgroundColor3 = color, Parent = holder }, { sound = false })
-	Kit.label({ Position = UDim2.fromOffset(0, 8), Size = UDim2.new(1, 0, 0.62, 0), Text = text.icon, TextScaled = true, Parent = button })
-	Kit.label({ AnchorPoint = Vector2.new(0, 1), Position = UDim2.new(0, 0, 1, -4), Size = UDim2.new(1, 0, 0.32, 0), Text = text.name, TextScaled = true, Parent = button })
+local function menuButton(parent, icon, name, color, order, onClick)
+	local holder = Kit.new("Frame", { Size = UDim2.fromOffset(150, 56), BackgroundTransparency = 1, LayoutOrder = order, Parent = parent })
+	local button = Kit.button({ Size = UDim2.fromScale(1, 1), Text = "", BackgroundColor3 = color, Parent = holder })
+	local face = Kit.face(button)
+	Kit.label({ Position = UDim2.fromOffset(8, 4), Size = UDim2.new(0, 40, 1, -8), Text = icon, TextScaled = true, Outline = false, Parent = face })
+	Kit.label({ Position = UDim2.fromOffset(50, 6), Size = UDim2.new(1, -58, 1, -12), Text = name, TextScaled = true, TextXAlignment = Enum.TextXAlignment.Left, Parent = face })
 	button.Activated:Connect(onClick)
 	return button
+end
+
+local function myPlot(data)
+	local world = workspace:FindFirstChild("GrowABrainrotWorld")
+	local plots = world and world:FindFirstChild("Plots")
+	return data.plotIndex and plots and plots:FindFirstChild("Plot" .. data.plotIndex)
 end
 
 function HudController.start(controllers)
 	local State = controllers.State
 	local gui = Kit.screen("Hud", 1)
 
-	-- top center: cash
-	local top = Kit.autoScale(Kit.new("Frame", {
-		AnchorPoint = Vector2.new(0.5, 0),
-		Position = UDim2.new(0.5, 0, 0, 12),
-		Size = UDim2.fromOffset(360, 110),
+	local stack = Kit.autoScale(Kit.new("Frame", {
+		AnchorPoint = Vector2.new(0, 0.5),
+		Position = UDim2.new(0, 18, 0.5, 10),
+		Size = UDim2.fromOffset(320, 420),
 		BackgroundTransparency = 1,
 		Parent = gui,
 	}))
-	local cashPill, cashLabel, icon = Kit.pill({ Parent = top, Position = UDim2.fromOffset(20, 0), Size = UDim2.new(1, -40, 0, 58), Color = Kit.Theme.Cash, Icon = "$" })
+
+	-- cash
+	local cashPill, cashLabel, icon = Kit.pill({ Parent = stack, Position = UDim2.fromOffset(8, 0), Size = UDim2.fromOffset(300, 60), Color = Kit.Theme.Cash, Icon = "$" })
 	cashIcon = icon
 	cashPulse = Kit.new("UIScale", { Parent = cashPill })
-	local incomeLabel = Kit.label({ Position = UDim2.fromOffset(0, 64), Size = UDim2.new(1, 0, 0, 26), Text = "+$0/s", TextSize = 24, TextColor3 = Color3.fromRGB(200, 255, 200), Parent = top })
-	local luckBanner = Kit.label({ Position = UDim2.fromOffset(-120, 90), Size = UDim2.new(1, 240, 0, 28), Text = "", TextSize = 26, TextColor3 = Kit.Theme.Accent, Visible = false, Parent = top })
+	local _, incomeLabel = Kit.chip({ Parent = stack, Position = UDim2.fromOffset(78, 64), Text = "+$0/s", Color = Kit.Theme.Good })
 
-	-- top left: day/night badge + shards
-	local side = Kit.autoScale(Kit.new("Frame", {
-		Position = UDim2.fromOffset(16, 60),
-		Size = UDim2.fromOffset(300, 110),
-		BackgroundTransparency = 1,
-		Parent = gui,
-	}))
-	local badge = Kit.new("Frame", { Size = UDim2.fromOffset(280, 46), BackgroundColor3 = Kit.Theme.PanelDark, BackgroundTransparency = 0.1, Parent = side })
-	Kit.corner(badge, 999)
-	Kit.stroke(badge, Kit.Theme.Outline, 3)
-	local badgeIcon = Kit.new("Frame", { Position = UDim2.fromOffset(-2, -2), Size = UDim2.fromOffset(50, 50), BackgroundColor3 = Color3.fromRGB(255, 210, 70), Parent = badge })
-	Kit.corner(badgeIcon, 999)
-	Kit.stroke(badgeIcon, Kit.Theme.Outline, 3)
-	Kit.gloss(badgeIcon, 0.35)
-	local phaseLabel = Kit.label({ Position = UDim2.fromOffset(58, 4), Size = UDim2.new(1, -66, 1, -8), Text = "", TextScaled = true, TextXAlignment = Enum.TextXAlignment.Left, Parent = badge })
-	local _, shardsValue = Kit.pill({ Parent = side, Position = UDim2.fromOffset(4, 58), Size = UDim2.fromOffset(200, 38), Color = Kit.Theme.Shards, Icon = "*" })
-	local lostLabel = Kit.label({ Position = UDim2.fromOffset(4, 100), Size = UDim2.fromOffset(300, 20), Text = "", TextSize = 16, TextColor3 = Color3.fromRGB(255, 190, 150), TextXAlignment = Enum.TextXAlignment.Left, Parent = side })
+	-- shards
+	local shardsPill = Kit.new("Frame", { Position = UDim2.fromOffset(8, 100), Size = UDim2.fromOffset(190, 36), BackgroundColor3 = Kit.Theme.Panel, Parent = stack })
+	Kit.corner(shardsPill, 999)
+	Kit.stroke(shardsPill)
+	local shardIcon = Kit.new("Frame", { Position = UDim2.fromOffset(-4, -4), Size = UDim2.fromOffset(44, 44), BackgroundColor3 = Kit.Theme.Shards, Parent = shardsPill })
+	Kit.corner(shardIcon, 999)
+	Kit.stroke(shardIcon)
+	Kit.gloss(shardIcon, 0.25)
+	Kit.label({ Size = UDim2.fromScale(1, 1), Text = "🌙", TextScaled = true, Outline = false, Parent = shardIcon })
+	local shardsValue = Kit.label({ Position = UDim2.fromOffset(48, 2), Size = UDim2.new(1, -56, 1, -4), Text = "0", TextScaled = true, Font = Kit.Theme.Heavy, TextColor3 = Kit.Theme.Shards, TextXAlignment = Enum.TextXAlignment.Left, Parent = shardsPill })
 
-	-- left: menu buttons
-	local menu = Kit.autoScale(Kit.new("Frame", {
-		AnchorPoint = Vector2.new(0, 0.5),
-		Position = UDim2.new(0, 16, 0.5, 20),
-		Size = UDim2.fromOffset(120, 300),
-		BackgroundTransparency = 1,
-		Parent = gui,
-	}))
-	Kit.new("UIListLayout", { Padding = UDim.new(0, 14), SortOrder = Enum.SortOrder.LayoutOrder, Parent = menu })
-	local shopButton = menuButton(menu, { icon = "$", name = "SHOP" }, Kit.Theme.Pink, 1, function()
+	-- day / night chip
+	local phaseChip = Kit.new("Frame", { Position = UDim2.fromOffset(8, 146), Size = UDim2.fromOffset(300, 38), BackgroundColor3 = Kit.Theme.Yellow, Parent = stack })
+	Kit.corner(phaseChip, 999)
+	Kit.stroke(phaseChip)
+	Kit.gloss(phaseChip, 0.15)
+	local phaseLabel = Kit.label({ Position = UDim2.fromOffset(14, 4), Size = UDim2.new(1, -28, 1, -8), Text = "", TextScaled = true, TextXAlignment = Enum.TextXAlignment.Left, Parent = phaseChip })
+
+	-- menu buttons (2 columns)
+	local grid = Kit.new("Frame", { Position = UDim2.fromOffset(8, 196), Size = UDim2.fromOffset(310, 200), BackgroundTransparency = 1, Parent = stack })
+	Kit.new("UIGridLayout", { CellSize = UDim2.fromOffset(148, 58), CellPadding = UDim2.fromOffset(8, 10), SortOrder = Enum.SortOrder.LayoutOrder, Parent = grid })
+	menuButton(grid, "🛒", "Shop", Kit.Theme.Pink, 1, function()
 		controllers.ShopController.toggle()
 	end)
-	menuButton(menu, { icon = "[ ]", name = "BAG" }, Kit.Theme.Blue, 2, function()
+	menuButton(grid, "🎒", "Bag", Kit.Theme.Teal, 2, function()
 		controllers.InventoryController.toggle()
 	end)
-	local restockLabel = Kit.label({ Position = UDim2.new(0, -10, 1, 2), Size = UDim2.new(1, 20, 0, 20), Text = "", TextSize = 16, Parent = shopButton })
+	menuButton(grid, "🏡", "Home", Kit.Theme.Blue, 3, function()
+		local data = State.data
+		local plot = data and myPlot(data)
+		local character = player.Character
+		if plot and character then
+			character:PivotTo(plot:GetAttribute("Spawn"))
+			Sfx.play("ui_select")
+		else
+			controllers.EffectsController.toast("Claim a garden first! Walk up to an empty plot.", Kit.Theme.Orange, 3)
+			Sfx.play("ui_error")
+		end
+	end)
+	local restockChip, restockLabel = Kit.chip({ Parent = stack, Position = UDim2.fromOffset(8, 330), Text = "restock 5:00" })
+	restockChip.Visible = true
+
+	-- top center: luck event banner + claim banner
+	local top = Kit.autoScale(Kit.new("Frame", {
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.new(0.5, 0, 0, 14),
+		Size = UDim2.fromOffset(620, 110),
+		BackgroundTransparency = 1,
+		Parent = gui,
+	}))
+	local luckBanner = Kit.new("Frame", { AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.fromScale(0.5, 0), Size = UDim2.fromOffset(560, 44), BackgroundColor3 = Kit.Theme.Purple, Visible = false, Parent = top })
+	Kit.corner(luckBanner, 999)
+	Kit.stroke(luckBanner)
+	Kit.gloss(luckBanner, 0.15)
+	local luckLabel = Kit.label({ Position = UDim2.fromOffset(16, 5), Size = UDim2.new(1, -32, 1, -10), Text = "", TextScaled = true, Parent = luckBanner })
+	local claimBanner = Kit.new("Frame", { AnchorPoint = Vector2.new(0.5, 0), Position = UDim2.new(0.5, 0, 0, 54), Size = UDim2.fromOffset(520, 46), BackgroundColor3 = Kit.Theme.Orange, Visible = false, Parent = top })
+	Kit.corner(claimBanner, 999)
+	Kit.stroke(claimBanner)
+	Kit.gloss(claimBanner, 0.15)
+	Kit.label({ Position = UDim2.fromOffset(16, 5), Size = UDim2.new(1, -32, 1, -10), Text = "🌱 Walk to an empty garden and CLAIM it!", TextScaled = true, Parent = claimBanner })
 
 	local shown = 0
 	local lastCash = nil
@@ -105,41 +141,40 @@ function HudController.start(controllers)
 		if not data then
 			return
 		end
-		-- roll the number toward the real value so gains feel juicy
 		shown += (data.cash - shown) * math.min(1, dt * 10)
 		if math.abs(data.cash - shown) < 0.5 then
 			shown = data.cash
 		end
 		cashLabel.Text = Format.cash(shown)
-		incomeLabel.Text = "+" .. Format.cash(data.income) .. " / sec"
-		shardsValue.Text = tostring(data.shards or 0)
-		lostLabel.Text = if (data.lostCount or 0) > 0 then string.format("%d brainrot%s at the Lost & Found!", data.lostCount, if data.lostCount == 1 then "" else "s") else ""
+		incomeLabel.Text = "+" .. Format.cash(data.income) .. "/s"
+		shardsValue.Text = tostring(data.shards or 0) .. (if (data.lostCount or 0) > 0 then string.format("  · %d lost!", data.lostCount) else "")
 
 		local now = workspace:GetServerTimeNow()
-		restockLabel.Text = "restock " .. Format.time(data.shop.endsAt - now)
+		restockLabel.Text = "📦 restock in " .. Format.time(data.shop.endsAt - now)
 
 		local phase = ReplicatedStorage:GetAttribute("Phase") or "Day"
 		local phaseLeft = Format.time((ReplicatedStorage:GetAttribute("PhaseEndsAt") or now) - now)
 		if phase == "Night" then
 			local boss = ReplicatedStorage:GetAttribute("BossNight")
-			phaseLabel.Text = string.format("%s %d  ·  %s", if boss then "67 NIGHT" else "NIGHT", ReplicatedStorage:GetAttribute("NightNumber") or 1, phaseLeft)
-			phaseLabel.TextColor3 = if boss then Color3.fromRGB(120, 190, 255) else Color3.fromRGB(205, 180, 255)
-			badgeIcon.BackgroundColor3 = if boss then Color3.fromRGB(60, 150, 255) else Color3.fromRGB(150, 120, 255)
+			phaseLabel.Text = string.format("%s %s %d · %s", if boss then "👹" else "🌙", if boss then "67 NIGHT" else "Night", ReplicatedStorage:GetAttribute("NightNumber") or 1, phaseLeft)
+			phaseChip.BackgroundColor3 = if boss then Kit.Theme.Blue else Kit.Theme.Purple
 		else
-			phaseLabel.Text = "Day  ·  night in " .. phaseLeft
-			phaseLabel.TextColor3 = Color3.fromRGB(255, 235, 140)
-			badgeIcon.BackgroundColor3 = Color3.fromRGB(255, 210, 70)
+			phaseLabel.Text = "☀️ Night in " .. phaseLeft
+			phaseChip.BackgroundColor3 = Kit.Theme.Yellow
 		end
 
 		local luckEnds = ReplicatedStorage:GetAttribute("LuckEndsAt") or 0
 		luckBanner.Visible = luckEnds > now
 		if luckBanner.Visible then
-			luckBanner.Text = string.format("%s  ·  x%s luck  ·  x%s mutations  ·  %s",
+			luckLabel.Text = string.format("🍀 %s · x%s luck · x%s mutations · %s",
 				ReplicatedStorage:GetAttribute("LuckEventName") or "LUCK",
 				tostring(ReplicatedStorage:GetAttribute("Luck") or 1),
 				tostring(ReplicatedStorage:GetAttribute("MutationLuck") or 1),
 				Format.time(luckEnds - now))
-			luckBanner.TextTransparency = 0.1 + 0.15 * math.sin(os.clock() * 6)
+		end
+		claimBanner.Visible = data.plotIndex == nil
+		if claimBanner.Visible then
+			claimBanner.Rotation = math.sin(os.clock() * 3) * 1.5
 		end
 	end)
 end

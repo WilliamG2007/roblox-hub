@@ -22,6 +22,7 @@ local GamePasses = require(Shared.Config.GamePasses)
 local Format = require(Shared.Format)
 local Kit = require(script.Parent.Parent.UI.Kit)
 local Sfx = require(script.Parent.Parent.UI.Sfx)
+local Hype = require(script.Parent.Parent.UI.Hype)
 
 local MarketplaceService = game:GetService("MarketplaceService")
 local Players = game:GetService("Players")
@@ -215,6 +216,11 @@ local function playSingle(pack, result)
 	Sfx.play(if BIG[def.rarity] then "reveal_rare" else "reveal_land", { pitch = 0.95 + rarity.order * 0.03 })
 	bigText(string.upper(def.rarity), rarity.color, 310, 44)
 	bigText(def.name .. (if result.pity then "  (PITY!)" else ""), Color3.new(1, 1, 1), 350, 44)
+	local hype = Hype.pick(rarity.order)
+	if hype then
+		local hypeLabel = bigText(hype, Kit.Theme.Yellow, 255, 52)
+		hypeLabel.Rotation = math.random(-6, 6)
+	end
 	wait(0.6)
 	skip = false -- the mutation spin always plays its own moment
 	mutationSlot(result)
@@ -288,7 +294,7 @@ local function playMulti(pack, results)
 		end
 	end
 	if best then
-		local stroke = best:FindFirstChildOfClass("UIStroke")
+		local stroke = best:FindFirstChildOfClass("UIStroke") :: UIStroke
 		stroke.Color = Color3.new(1, 1, 1)
 		stroke.Thickness = 7
 		Kit.bounce(best)

@@ -10,25 +10,30 @@ local function rgb(r, g, b)
 	return Color3.fromRGB(r, g, b)
 end
 
+-- bright, toy-like brainrot palette (shared by the world and, via Kit, the UI)
 Style.Palette = {
-	Grass = rgb(112, 208, 92),
-	GrassLight = rgb(140, 225, 110),
-	GrassDark = rgb(84, 180, 76),
-	Dirt = rgb(150, 98, 62),
-	DirtDark = rgb(110, 70, 45),
-	Cream = rgb(255, 238, 205),
-	CreamDark = rgb(236, 210, 170),
-	Path = rgb(250, 226, 180),
-	Road = rgb(120, 118, 140),
-	Wood = rgb(186, 126, 78),
-	WoodDark = rgb(140, 92, 56),
-	White = rgb(250, 250, 255),
-	Gold = rgb(255, 200, 50),
-	Pink = rgb(255, 120, 175),
-	Sky = rgb(120, 200, 255),
-	Purple = rgb(165, 110, 255),
-	Orange = rgb(255, 160, 60),
-	Mint = rgb(110, 230, 190),
+	Grass = rgb(110, 215, 85),
+	GrassLight = rgb(150, 235, 105),
+	GrassDark = rgb(80, 185, 75),
+	Lime = rgb(170, 240, 60),
+	Dirt = rgb(160, 102, 64),
+	DirtDark = rgb(115, 72, 46),
+	Cream = rgb(255, 242, 212),
+	CreamDark = rgb(240, 215, 175),
+	Path = rgb(255, 230, 185),
+	Road = rgb(150, 140, 215),
+	Wood = rgb(190, 128, 80),
+	WoodDark = rgb(142, 92, 56),
+	White = rgb(252, 252, 255),
+	Gold = rgb(255, 205, 45),
+	Pink = rgb(255, 90, 170),
+	Bubblegum = rgb(255, 160, 210),
+	Turquoise = rgb(45, 215, 210),
+	Sky = rgb(90, 190, 255),
+	Purple = rgb(160, 95, 255),
+	Lavender = rgb(195, 165, 255),
+	Orange = rgb(255, 150, 45),
+	Mint = rgb(110, 235, 190),
 }
 
 -- glossy plastic (the default look for everything)

@@ -92,26 +92,26 @@ local function render()
 	for i, seed in visibleSeeds() do
 		local mutated = seed.mutation.id ~= "Normal"
 		local cell = Kit.button({ Text = "", BackgroundColor3 = if mutated then seed.mutation.color else seed.def.colors[1], LayoutOrder = i, Parent = grid })
-		local stroke = cell:FindFirstChildOfClass("UIStroke")
+		local stroke = Kit.outline(cell)
 		stroke.Color = if seed.key == selectedKey then Color3.new(1, 1, 1) else Rarities.byName[seed.def.rarity].color
 		stroke.Thickness = if seed.key == selectedKey then 4 else 3
-		Kit.label({ Position = UDim2.fromOffset(4, 4), Size = UDim2.new(1, -8, 0, 40), Text = seed.def.name, TextScaled = true, TextWrapped = true, TextStrokeTransparency = 0, Parent = cell })
+		Kit.label({ Position = UDim2.fromOffset(4, 4), Size = UDim2.new(1, -8, 0, 40), Text = seed.def.name, TextScaled = true, TextWrapped = true, Parent = Kit.face(cell) })
 		if mutated then
-			Kit.label({ Position = UDim2.fromOffset(4, 44), Size = UDim2.new(1, -8, 0, 18), Text = string.upper(seed.mutation.name), TextScaled = true, TextStrokeTransparency = 0, Parent = cell })
+			Kit.label({ Position = UDim2.fromOffset(4, 44), Size = UDim2.new(1, -8, 0, 18), Text = string.upper(seed.mutation.name), TextScaled = true, Parent = Kit.face(cell) })
 		end
-		Kit.label({ AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -6, 1, -4), Size = UDim2.fromOffset(60, 26), Text = "x" .. seed.count, TextSize = 22, TextXAlignment = Enum.TextXAlignment.Right, TextStrokeTransparency = 0, Parent = cell })
+		Kit.label({ AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -6, 1, -4), Size = UDim2.fromOffset(60, 26), Text = "x" .. seed.count, TextSize = 22, TextXAlignment = Enum.TextXAlignment.Right, Parent = Kit.face(cell) })
 		cell.Activated:Connect(function()
 			selectedKey = seed.key
 			render()
 		end)
 	end
 	for name, button in filterButtons do
-		button.BackgroundColor3 = if name == filter then Color3.fromRGB(140, 110, 255) else Color3.fromRGB(50, 44, 95)
+		button.BackgroundColor3 = if name == filter then Kit.Theme.Purple else Color3.fromRGB(200, 190, 230)
 	end
 	local autoSell = State.data and State.data.autoSell or {}
 	for name, button in autoButtons do
 		button.Text = name .. (if autoSell[name] then ": ON" else ": off")
-		button.BackgroundColor3 = if autoSell[name] then Kit.Theme.Good else Color3.fromRGB(70, 60, 110)
+		button.BackgroundColor3 = if autoSell[name] then Kit.Theme.Good else Kit.Theme.Disabled
 	end
 	renderDetail()
 end

@@ -6,7 +6,6 @@ local MessagingService = game:GetService("MessagingService")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Remotes = require(ReplicatedStorage.Shared.Remotes)
-local Style = require(ReplicatedStorage.Shared.Style)
 
 local FameService = {}
 
@@ -27,22 +26,19 @@ local function render()
 end
 
 local function buildBoard()
-	local P = Style.Palette
-	local root = services.MapService.Root
-	local cf = CFrame.new(0, 14, -16) * CFrame.Angles(0, math.pi, 0) -- front faces the spawn
-	-- gold frame behind a deep purple board, on two posts, with floating stars
-	Style.roundedBox(root, Vector3.new(36, 20, 0.8), cf * CFrame.new(0, 0, 0.6), P.Gold, 2.5)
-	local board = Style.roundedBox(root, Vector3.new(34, 18, 1), cf, Color3.fromRGB(45, 35, 95), 2)
-	board.Name = "WallOfFame"
-	for _, x in { -12, 12 } do
-		Style.cylinder(root, 5, 1.4, cf * CFrame.new(x, -14, 0.6), P.WoodDark)
+	-- the board itself is part of the map (WorldBuilder); we only add the live text
+	local board = services.MapService.Root:FindFirstChild("WallOfFame", true)
+	if not board then
+		warn("[FameService] no WallOfFame part in the map; skipping the board")
+		lines = {}
+		return
 	end
-	for i, x in { -15, 15 } do
-		local star = Style.part(root, { Size = Vector3.new(2.4, 2.4, 0.8), CFrame = cf * CFrame.new(x, 11.5, 0) * CFrame.Angles(0, 0, math.rad(45)), Color = P.Gold, Material = Enum.Material.Neon, CanCollide = false })
-		Style.float(star, 0.5, 1.6, i)
+	local old = board:FindFirstChild("FameGui")
+	if old then
+		old:Destroy()
 	end
-
 	local gui = Instance.new("SurfaceGui")
+	gui.Name = "FameGui"
 	gui.Face = Enum.NormalId.Front
 	gui.SizingMode = Enum.SurfaceGuiSizingMode.PixelsPerStud
 	gui.PixelsPerStud = 30
@@ -55,7 +51,7 @@ local function buildBoard()
 	local title = Instance.new("TextLabel")
 	title.Size = UDim2.new(1, 0, 0, 90)
 	title.BackgroundTransparency = 1
-	title.Font = Enum.Font.FredokaOne
+	title.Font = Enum.Font.LuckiestGuy
 	title.TextScaled = true
 	title.Text = "WALL OF FAME"
 	title.TextColor3 = Color3.fromRGB(255, 210, 60)

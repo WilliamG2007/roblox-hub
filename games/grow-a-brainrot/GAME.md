@@ -168,6 +168,17 @@ Random, about every 15–25 min, lasting 2–3 min: **Pasta Rain**, **Thundersto
 
 ---
 
+## The map lives in the place (baking)
+The map is built by `server/World/WorldBuilder.luau`. Bake it into the place once so it's visible and editable in Studio:
+Studio > View > Command Bar, run `require(game.ServerScriptService.Server.World.WorldBuilder:Clone()).bake()`, then File > Save.
+At runtime `MapService` uses `Workspace.GrowABrainrotWorld` if it exists and only builds a fresh map when it's missing. `bake(true)` rebuilds over an existing bake (wipes manual edits inside it). Keep the names gameplay code looks for: ShopPrompt, LostFoundPrompt, WallOfFame, Plots/Plot<n>/(Tile<i>, CollectPad, SignPost, ClaimPrompt, ClaimSign), RoadX/RoadZ/RoadTop attributes. Code stays in git; the map is saved with the place (use Team Create to build together).
+
+## Claiming gardens
+No auto-assign or teleport on join. Players walk to an empty garden and use its "Claim this garden" prompt (`PlotService.claim`, fires `PlotService.Claimed`, then `GardenService.loadPlayer`). Until then the HUD shows a claim banner; the Home button teleports you to your garden afterwards.
+
+## UI style v2 (matches the friend's reference)
+White-to-cream panels, thick dark outlines, colored header bars with polka dots and LuckiestGuy titles; chunky saturated buttons with a 3D depth edge that physically presses down (`Kit.button`: set its BackgroundColor3/Text as usual; put custom children in `Kit.face(button)`, highlight with `Kit.outline(button)`); white currency pills with a gold coin; colored chips; emoji icons. Action colors: green buy, pink special, blue/teal secondary, purple rare, red close. Kid-friendly hype text on good pulls (`client/UI/Hype.luau`).
+
 ## Look & sound (overhaul, Nov 2026)
 **Art direction:** bubbly, glossy, colorful plastic with real studs used as accents (ledges, corners, tops), not on every surface. Everything is built from `shared/Style` (palette, `roundedBox`, `cylinder`, `ball`, `studs`, `float`/`spin` decor tags). New props should use those builders and `Style.Palette`.
 - **World** (`MapService`): layered plaza with a stud ring and floating gems, rounded pack shop with a floating sign and light bulbs, curbed road, candy and leafy trees, flower beds, rolling hills, drifting clouds; tuned lighting (bloom, sun rays, atmosphere, color correction).

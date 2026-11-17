@@ -54,7 +54,7 @@ end
 local function select(id)
 	selected = if selected == id then nil else id
 	for seedId, button in buttons do
-		local stroke = button:FindFirstChildOfClass("UIStroke")
+		local stroke = Kit.outline(button)
 		stroke.Color = if seedId == selected then Color3.fromRGB(255, 255, 255) else Color3.new(0, 0, 0)
 		stroke.Thickness = if seedId == selected then 4 else 2.5
 	end
@@ -100,12 +100,12 @@ local function rebuild()
 				Text = "",
 				Parent = bar,
 			}, { sound = "ui_select" })
-			Kit.label({ Name = "Name", Position = UDim2.fromOffset(4, 4), Size = UDim2.new(1, -8, 0, 40), Text = def.name, TextScaled = true, TextWrapped = true, TextStrokeTransparency = 0, Parent = button })
+			Kit.label({ Name = "Name", Position = UDim2.fromOffset(4, 4), Size = UDim2.new(1, -8, 0, 40), Text = def.name, TextScaled = true, TextWrapped = true, Parent = Kit.face(button) })
 			if mutation.id ~= "Normal" then
-				Kit.label({ Name = "Mutation", Position = UDim2.fromOffset(4, 44), Size = UDim2.new(1, -8, 0, 20), Text = string.upper(mutation.name), TextScaled = true, TextColor3 = Color3.new(1, 1, 1), TextStrokeTransparency = 0, Parent = button })
+				Kit.label({ Name = "Mutation", Position = UDim2.fromOffset(4, 44), Size = UDim2.new(1, -8, 0, 20), Text = string.upper(mutation.name), TextScaled = true, TextColor3 = Color3.new(1, 1, 1), Parent = Kit.face(button) })
 			end
-			Kit.label({ Name = "Count", AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -6, 1, -4), Size = UDim2.fromOffset(60, 30), Text = "", TextSize = 26, TextXAlignment = Enum.TextXAlignment.Right, TextStrokeTransparency = 0, Parent = button })
-			Kit.new("Frame", { Name = "RarityBar", AnchorPoint = Vector2.new(0, 1), Position = UDim2.new(0, 6, 1, -6), Size = UDim2.fromOffset(20, 20), BackgroundColor3 = Rarities.byName[def.rarity].color, Parent = button })
+			Kit.label({ Name = "Count", AnchorPoint = Vector2.new(1, 1), Position = UDim2.new(1, -6, 1, -4), Size = UDim2.fromOffset(60, 30), Text = "", TextSize = 26, TextXAlignment = Enum.TextXAlignment.Right, Parent = Kit.face(button) })
+			Kit.new("Frame", { Name = "RarityBar", AnchorPoint = Vector2.new(0, 1), Position = UDim2.new(0, 6, 1, -6), Size = UDim2.fromOffset(20, 20), BackgroundColor3 = Rarities.byName[def.rarity].color, Parent = Kit.face(button) })
 			button.Activated:Connect(function()
 				select(key)
 			end)

@@ -83,6 +83,13 @@ end
 
 function DayNightService.init()
 	fx = Remotes.get("Fx")
+	-- daytime look = whatever the place's lighting is (baked or hand-tuned in Studio)
+	LOOKS.Day.lighting = {
+		ClockTime = Lighting.ClockTime,
+		Brightness = Lighting.Brightness,
+		Ambient = Lighting.Ambient,
+		OutdoorAmbient = Lighting.OutdoorAmbient,
+	}
 	state.endsAt = workspace:GetServerTimeNow() + config.DaySeconds
 	publish()
 end
