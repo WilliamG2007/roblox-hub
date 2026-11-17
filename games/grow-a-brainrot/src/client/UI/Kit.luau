@@ -373,6 +373,11 @@ function Kit.window(gui: ScreenGui, opts: { title: string, accent: Color3, size:
 		if holder.Visible then
 			return
 		end
+		-- only one menu at a time: opening this one closes the other
+		if Kit.openWindow and Kit.openWindow ~= window and Kit.openWindow.isOpen() then
+			Kit.openWindow.close()
+		end
+		Kit.openWindow = window
 		token += 1
 		holder.Visible = true
 		frame.GroupTransparency = 1
@@ -390,6 +395,9 @@ function Kit.window(gui: ScreenGui, opts: { title: string, accent: Color3, size:
 		end
 		token += 1
 		local mine = token
+		if Kit.openWindow == window then
+			Kit.openWindow = nil
+		end
 		TweenService:Create(frame, TweenInfo.new(0.15, Enum.EasingStyle.Quad, Enum.EasingDirection.In), { GroupTransparency = 1, Position = UDim2.fromOffset(0, 18) }):Play()
 		Sfx.play("ui_close")
 		task.delay(0.15, function()
