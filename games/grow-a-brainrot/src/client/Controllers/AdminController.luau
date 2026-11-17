@@ -40,6 +40,9 @@ local QUICK = {
 	{ "+100 Moon Shards", "shards 100" },
 	{ "Toggle 2x Roll (me)", "pass FastRoll" },
 	{ "Wild brainrot", "wander" },
+	{ "Restart tutorial", "tutorial" },
+	{ "Daily reward again", "daily" },
+	{ "WIPE MY SAVE", "reset me", true },
 }
 
 function AdminController.start()
@@ -93,8 +96,21 @@ function AdminController.start()
 	local grid = Kit.new("ScrollingFrame", { Position = UDim2.fromOffset(12, 116), Size = UDim2.new(1, -24, 0, 292), BackgroundTransparency = 1, BorderSizePixel = 0, ScrollBarThickness = 5, AutomaticCanvasSize = Enum.AutomaticSize.Y, CanvasSize = UDim2.new(), Parent = panel })
 	Kit.new("UIGridLayout", { CellSize = UDim2.new(0.5, -4, 0, 32), CellPadding = UDim2.fromOffset(8, 5), SortOrder = Enum.SortOrder.LayoutOrder, Parent = grid })
 	for i, quick in QUICK do
-		local button = Kit.button({ Text = quick[1], TextSize = 16, BackgroundColor3 = Color3.fromRGB(70, 60, 130), LayoutOrder = i, Parent = grid })
+		local danger = quick[3] == true
+		local button = Kit.button({ Text = quick[1], TextSize = 16, BackgroundColor3 = if danger then Kit.Theme.Red else Kit.Theme.Purple, LayoutOrder = i, Parent = grid })
+		local armedUntil = 0
 		button.Activated:Connect(function()
+			if danger and os.clock() > armedUntil then
+				-- destructive: needs a second click within 3 seconds
+				armedUntil = os.clock() + 3
+				button.Text = "CLICK AGAIN!"
+				task.delay(3, function()
+					button.Text = quick[1]
+				end)
+				return
+			end
+			armedUntil = 0
+			button.Text = quick[1]
 			remote:FireServer(quick[2])
 		end)
 	end

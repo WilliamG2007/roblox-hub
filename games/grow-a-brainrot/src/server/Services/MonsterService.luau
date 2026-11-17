@@ -243,6 +243,9 @@ local function giveShards(player, amount, position)
 	if not data then
 		return
 	end
+	if player:GetAttribute("FriendBoost") then
+		amount = math.ceil(amount * 1.25) -- playing with friends pays off
+	end
 	data.shards += amount
 	services.SyncService.mark(player)
 	fx:FireClient(player, "Shards", amount, position)
@@ -274,6 +277,7 @@ local function die(monster, killer)
 	else
 		if killer and killer.Parent then
 			giveShards(killer, rng:NextInteger(GRUMBLER.shards[1], GRUMBLER.shards[2]), pos)
+			services.ProgressService.track(killer, "monsterKilled")
 		end
 		despawn(monster)
 	end

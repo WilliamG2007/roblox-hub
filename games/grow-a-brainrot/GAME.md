@@ -168,6 +168,19 @@ Random, about every 15–25 min, lasting 2–3 min: **Pasta Rain**, **Thundersto
 
 ---
 
+## Progression & live-game systems (built)
+- **Tutorial** (`Config/Progress.Tutorial`, `ProgressService`, client `ProgressController`): 5 guided steps (claim → open pack → plant → pop → collect) with a quest card, bouncing arrow + beam to the target, rewards per step, skip button. Logged as an onboarding funnel in Roblox Analytics.
+- **Daily login streak**: 7-day reward calendar, pops up after the tutorial when claimable; missing a day resets.
+- **Daily quests**: 3 per day per player from a pool (open packs, plant, grow a Rare, collect, defeat monsters, sell, catch a wild brainrot, pull a mutation). Red dot on the Quests button when something is claimable.
+- **Brainrot Index** (`IndexController`): collection book by rarity with ??? silhouettes; completing a row is claimable for +5% income forever.
+- **Rebirth** (`RebirthController`): costs $1M × 8^rebirths; resets cash/seeds/garden, keeps Index/shards/passes, +50% income each; Tralala/67/Cosmic packs unlock at rebirth 1/2/3.
+- **Store** (`StoreController`, `MonetizationService`): passes FastRoll, 2x Cash, VIP (+25% + tag), Auto-Collect; products Cash Small/Large, Luck Potion (x2 pack luck 15 min, shown live in odds, hidden where paid random items are restricted), Instant Restock. Receipts are idempotent (stored in the save before granting). Set real IDs in `Config/GamePasses.luau`.
+- **Leaderboards** (`LeaderboardService`): Richest + Rebirths boards in the lawns (OrderedDataStore), added at runtime if the baked map lacks them.
+- **Friend boost** (`SocialService`): a Roblox friend in the server gives +10% income, +25% Moon Shards.
+- **Analytics** (`AnalyticsService` wrapper): onboarding funnel, economy sources/sinks, rebirth events.
+- **Signature models** in `BrainrotModels`: Tung Tung (log + bat), Tralalero (shark in sneakers), Bombardiro (croc bomber), Ballerina Cappuccina, Lirilì Larilà, Chimpanzini Bananini, Cappuccino Assassino, Lil 67, Strawberry Elephant, Brr Brr Patapim. Others use the generic bubbly body.
+- Not done: ProfileStore migration (needs a third-party download; current DataService has session locking).
+
 ## The map lives in the place (baking)
 The map is built by `server/World/WorldBuilder.luau`. Bake it into the place once so it's visible and editable in Studio:
 Studio > View > Command Bar, run `require(game.ServerScriptService.Server.World.WorldBuilder:Clone()).bake()`, then File > Save.

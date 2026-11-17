@@ -297,12 +297,54 @@ function handlers.Burst(position, color)
 	Sfx.playAt("monster_die", position)
 end
 
--- big happy moment (claiming a garden)
-function handlers.Celebrate(position, color)
-	burst(position + Vector3.new(0, 3, 0), color, 80, 40)
-	ring(position + Vector3.new(0, 1, 0), color, 50, 0.8)
-	lightBeam(position, color)
-	worldPopup(position + Vector3.new(0, 10, 0), "YOUR GARDEN!", color, 70)
+-- screen confetti + a big popping headline
+local CONFETTI = { Color3.fromRGB(255, 90, 170), Color3.fromRGB(45, 215, 210), Color3.fromRGB(255, 205, 45), Color3.fromRGB(160, 95, 255), Color3.fromRGB(120, 230, 80) }
+local function screenCelebrate(text, color)
+	local camera = workspace.CurrentCamera
+	local size = camera.ViewportSize
+	for i = 1, 40 do
+		local piece = Kit.new("Frame", {
+			AnchorPoint = Vector2.new(0.5, 0.5),
+			Position = UDim2.fromOffset(math.random(0, size.X), -20),
+			Size = UDim2.fromOffset(math.random(10, 18), math.random(6, 12)),
+			Rotation = math.random(0, 360),
+			BackgroundColor3 = CONFETTI[i % #CONFETTI + 1],
+			BorderSizePixel = 0,
+			ZIndex = 30,
+			Parent = flyLayer,
+		})
+		local fall = TweenService:Create(piece, TweenInfo.new(math.random(14, 24) / 10, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
+			Position = UDim2.fromOffset(piece.Position.X.Offset + math.random(-120, 120), size.Y + 30),
+			Rotation = piece.Rotation + math.random(-540, 540),
+		})
+		fall:Play()
+		fall.Completed:Once(function()
+			piece:Destroy()
+		end)
+	end
+	if text then
+		local label = Kit.label({ AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.fromScale(0.5, 0.35), Size = UDim2.fromOffset(900, 110), Text = text, TextScaled = true, Font = Kit.Theme.Heavy, TextColor3 = color, ZIndex = 31, Parent = flyLayer })
+		local scale = Kit.new("UIScale", { Scale = 0.2, Parent = label })
+		TweenService:Create(scale, TweenInfo.new(0.45, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Scale = 1 }):Play()
+		TweenService:Create(label, TweenInfo.new(2.2, Enum.EasingStyle.Sine), { Rotation = math.random(-6, 6) }):Play()
+		task.delay(1.8, function()
+			Kit.fadeOut(label, 0.5)
+		end)
+		task.delay(2.4, function()
+			label:Destroy()
+		end)
+	end
+end
+
+-- big happy moment: claiming a garden, rewards, rebirths, purchases
+function handlers.Celebrate(position, color, text)
+	color = color or Color3.fromRGB(255, 215, 80)
+	if position then
+		burst(position + Vector3.new(0, 3, 0), color, 80, 40)
+		ring(position + Vector3.new(0, 1, 0), color, 50, 0.8)
+		lightBeam(position, color)
+	end
+	screenCelebrate(text or (if position then "YOUR GARDEN!" else nil), color)
 	Sfx.play("unlock")
 end
 

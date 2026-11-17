@@ -9,9 +9,9 @@ Remotes.setup()
 
 -- order matters: init runs top to bottom, then start runs top to bottom
 local ORDER = {
-	"DataService", "MapService", "EconomyService", "SyncService", "PlotService", "MonetizationService",
-	"LuckService", "FameService", "InventoryService", "ShopService", "GardenService", "WanderService",
-	"DayNightService", "MonsterService", "LostFoundService", "AdminService",
+	"DataService", "AnalyticsService", "MapService", "EconomyService", "SyncService", "PlotService", "MonetizationService",
+	"LuckService", "FameService", "InventoryService", "ShopService", "GardenService", "ProgressService", "WanderService",
+	"DayNightService", "MonsterService", "LostFoundService", "LeaderboardService", "SocialService", "AdminService",
 }
 
 local services = {}
@@ -33,6 +33,7 @@ local fx = Remotes.get("Fx")
 
 services.PlotService.Claimed:Connect(function(player, plot)
 	services.GardenService.loadPlayer(player, services.DataService.get(player), plot)
+	services.ProgressService.track(player, "claim")
 	services.SyncService.mark(player)
 	fx:FireClient(player, "Toast", "This garden is yours! Open the PACK SHOP to get seeds.", Color3.fromRGB(150, 255, 150))
 	fx:FireClient(player, "Celebrate", plot:GetPivot().Position, Color3.fromRGB(255, 215, 80))
@@ -52,6 +53,8 @@ local function onPlayerAdded(player)
 		services.DataService.release(player)
 		return
 	end
+
+	services.ProgressService.onPlayerLoaded(player)
 
 	-- no auto-assign: the player walks to an empty garden and claims it
 	services.SyncService.mark(player)

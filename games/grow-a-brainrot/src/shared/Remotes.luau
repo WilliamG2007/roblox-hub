@@ -9,7 +9,8 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 
-local NAMES = { "State", "Fx", "Plant", "BuyPack", "Admin", "Inventory" }
+--   Progress client -> server (action, ...)  "ClaimDaily" | "ClaimQuest" i | "ClaimIndex" rarity | "Rebirth" | "SkipTutorial"
+local NAMES = { "State", "Fx", "Plant", "BuyPack", "Admin", "Inventory", "Progress" }
 local FOLDER_NAME = "Remotes"
 
 local Remotes = {}

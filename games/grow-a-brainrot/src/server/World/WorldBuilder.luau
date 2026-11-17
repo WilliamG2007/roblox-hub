@@ -501,10 +501,7 @@ local function buildPlot(index, position, parent)
 		Color = Color3.fromRGB(90, 255, 120),
 		Material = Enum.Material.Neon,
 	})
-	local coin = Style.part(plot, { Name = "Coin", Shape = Enum.PartType.Cylinder, Size = Vector3.new(0.5, 3, 3), CFrame = padCFrame * CFrame.new(0, 4.5, 0), Color = P.Gold, Reflectance = 0.15, CanCollide = false, CastShadow = false })
-	Style.spin(coin, 90)
-	Style.float(coin, 0.4, 2)
-	billboard(pad, "Stored", "COLLECT $0", UDim2.fromOffset(250, 50), Vector3.new(0, 7.5, 0), Color3.fromRGB(150, 255, 160))
+	billboard(pad, "Stored", "COLLECT $0", UDim2.fromOffset(250, 50), Vector3.new(0, 4.5, 0), Color3.fromRGB(150, 255, 160)).MaxDistance = 60
 
 	local signCFrame = base * CFrame.new(0, 0, depth / 2 + 2.5)
 	for _, x in { -6, 6 } do
@@ -512,7 +509,7 @@ local function buildPlot(index, position, parent)
 	end
 	local signPost = Style.roundedBox(plot, Vector3.new(16, 4.5, 1), signCFrame * CFrame.new(0, 6, 0), color, 1.5)
 	signPost.Name = "SignPost"
-	billboard(signPost, "Owner", "Empty Garden", UDim2.fromOffset(320, 70), Vector3.new(0, 4.5, 0), Color3.new(1, 1, 1))
+	billboard(signPost, "Owner", "Empty Garden", UDim2.fromOffset(320, 70), Vector3.new(0, 4.5, 0), Color3.new(1, 1, 1)).MaxDistance = 110
 	local claim = prompt(floor, "ClaimPrompt", "Claim this garden", "Empty Garden", 30)
 	claim.HoldDuration = 0.5
 	claim.Exclusivity = Enum.ProximityPromptExclusivity.OneGlobally

@@ -49,6 +49,21 @@ function PlotService.start()
 			plot:SetAttribute("OwnerName", "")
 			setClaimable(plot, true)
 			setOwnerText(plot, "Empty Garden")
+			-- upgrade older baked maps: no spinning coin, shorter label range
+			for _, inst in plot:GetDescendants() do
+				if inst.Name == "Coin" and inst:IsA("BasePart") then
+					inst:Destroy()
+				end
+			end
+			local stored = plot.CollectPad:FindFirstChild("Stored")
+			if stored then
+				stored.MaxDistance = 60
+				stored.StudsOffset = Vector3.new(0, 4.5, 0)
+			end
+			local owner = find(plot, "Owner")
+			if owner then
+				owner.MaxDistance = 110
+			end
 			local prompt = find(plot, "ClaimPrompt")
 			if prompt then
 				prompt.Triggered:Connect(function(player)

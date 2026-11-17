@@ -39,6 +39,14 @@ local function defaultData()
 		shards = 0, -- Moon Shards from defeating night monsters
 		lostFound = {}, -- { { id, mutation } } brainrots monsters ran off with
 		autoSell = {}, -- [rarityName] = true: Normal seeds of that rarity auto-sell from packs
+		tutorial = 1, -- current tutorial step (past the last step = done)
+		tutorialProgress = 0,
+		daily = { lastDay = 0, streak = 0, claimedDay = 0 }, -- login streak (UTC days)
+		quests = { day = 0, list = {} }, -- today's quests: { id, progress, done, claimed }
+		rebirths = 0,
+		indexClaimed = {}, -- [rarityName] = true once that Index row's bonus is claimed
+		purchases = {}, -- [receiptId] = true (developer product receipts already granted)
+		luckUntil = 0, -- personal Luck Potion end time (os.time)
 		stats = { planted = 0, grown = 0, earned = 0 },
 		lastSave = 0,
 	}

@@ -37,6 +37,8 @@ local function send(player)
 		shards = data.shards,
 		autoSell = data.autoSell,
 		lostCount = #data.lostFound,
+		progress = services.ProgressService.snapshot(player),
+		luckEndsAt = data.luckUntil,
 		canSave = services.DataService.canSave(player),
 	})
 	local leaderstats = player:FindFirstChild("leaderstats")

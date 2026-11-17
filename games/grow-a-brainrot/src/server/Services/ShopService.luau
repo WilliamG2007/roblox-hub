@@ -81,7 +81,7 @@ local function playerShop(player)
 	return data.shop
 end
 
-local function rollOne(data, pack)
+local function rollOne(player, data, pack)
 	-- rarity (pity can force it)
 	local pityRarity = Rarities.byName[pack.pity.rarity]
 	local pity = data.pity[pack.id] or 0
@@ -89,7 +89,7 @@ local function rollOne(data, pack)
 	if pity + 1 >= pack.pity.count then
 		rarityName = pack.pity.rarity
 	else
-		rarityName = Odds.pick(Odds.rarities(pack, services.LuckService.getLuck()), rng).rarity
+		rarityName = Odds.pick(Odds.rarities(pack, services.LuckService.getLuck() * services.MonetizationService.personalLuck(player)), rng).rarity
 	end
 	if Rarities.byName[rarityName].order >= pityRarity.order then
 		data.pity[pack.id] = 0
@@ -128,7 +128,7 @@ function ShopService.openPacks(player, pack, count: number)
 	local results = {}
 	local autoSold = 0
 	for _ = 1, count do
-		local result = rollOne(data, pack)
+		local result = rollOne(player, data, pack)
 		if services.InventoryService.shouldAutoSell(data, result.id, result.mutation) then
 			result.autoSold = services.InventoryService.seedValue(result.id, result.mutation)
 			autoSold += result.autoSold
@@ -142,6 +142,12 @@ function ShopService.openPacks(player, pack, count: number)
 		services.EconomyService.add(player, autoSold)
 	end
 	fx:FireClient(player, "PackOpened", pack.id, results)
+	services.ProgressService.track(player, "packOpened", count)
+	for _, result in results do
+		if result.mutation ~= "Normal" then
+			services.ProgressService.track(player, "mutatedPull")
+		end
+	end
 	-- announce after the reveal has had time to play
 	task.delay(if count == 1 then 4.5 else 3, function()
 		for _, result in results do
@@ -158,6 +164,11 @@ function ShopService.buy(player, packId, count)
 	local pack = Packs.byId[packId]
 	local shop = playerShop(player)
 	if not pack or not shop then
+		return
+	end
+	local data = services.DataService.get(player)
+	if (pack.rebirth or 0) > data.rebirths then
+		fx:FireClient(player, "Toast", string.format("%s unlocks at Rebirth %d!", pack.name, pack.rebirth), Color3.fromRGB(255, 120, 120))
 		return
 	end
 	count = math.clamp(math.floor(tonumber(count) or 1), 1, GameConfig.MaxOpenAtOnce)
@@ -187,6 +198,7 @@ function ShopService.buy(player, packId, count)
 		fx:FireClient(player, "Toast", "Not enough cash!", Color3.fromRGB(255, 120, 120))
 		return
 	end
+	services.AnalyticsService.economy(player, "Sink", if pack.currency == "shards" then "MoonShards" else "Cash", cost, if pack.currency == "shards" then data.shards else data.cash, "Shop", pack.id)
 	shop.bought[packId] = bought + count
 	ShopService.openPacks(player, pack, count)
 end

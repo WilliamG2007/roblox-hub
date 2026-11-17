@@ -12,6 +12,7 @@ local Brainrots = require(Shared.Config.Brainrots)
 local Rarities = require(Shared.Config.Rarities)
 local Mutations = require(Shared.Config.Mutations)
 local Packs = require(Shared.Config.Packs)
+local GamePasses = require(Shared.Config.GamePasses)
 local Kit = require(script.Parent.Parent.UI.Kit)
 local Sfx = require(script.Parent.Parent.UI.Sfx)
 
@@ -36,11 +37,17 @@ local function percent(chance)
 end
 
 local function serverLuck()
-	local endsAt = ReplicatedStorage:GetAttribute("LuckEndsAt") or 0
-	if endsAt > workspace:GetServerTimeNow() then
-		return ReplicatedStorage:GetAttribute("Luck") or 1, ReplicatedStorage:GetAttribute("MutationLuck") or 1
+	local now = workspace:GetServerTimeNow()
+	local luck, mutationLuck = 1, 1
+	if (ReplicatedStorage:GetAttribute("LuckEndsAt") or 0) > now then
+		luck, mutationLuck = ReplicatedStorage:GetAttribute("Luck") or 1, ReplicatedStorage:GetAttribute("MutationLuck") or 1
 	end
-	return 1, 1
+	-- personal Luck Potion stacks on top
+	local data = State and State.data
+	if data and (data.luckEndsAt or 0) > now then
+		luck *= GamePasses.Products.LuckPotion.luck
+	end
+	return luck, mutationLuck
 end
 
 --------------------------------------------------------------------------------
@@ -183,6 +190,19 @@ local function refresh()
 			local tenCount = math.min(10, item.left)
 			local wallet = if pack.currency == "shards" then data.shards or 0 else data.cash
 			local left = item.left
+			local locked = (pack.rebirth or 0) > (data.progress and data.progress.rebirths or 0)
+			if locked then
+				card.affordable = function()
+					return false
+				end
+				card.one.Text = "🔒"
+				card.ten.Text = "R" .. pack.rebirth
+				card.one.BackgroundColor3 = Kit.Theme.Disabled
+				card.ten.BackgroundColor3 = Kit.Theme.Disabled
+				card.stock.Text = string.format("🔒 Unlocks at Rebirth %d", pack.rebirth)
+				continue
+			end
+			card.one.Text = "OPEN"
 			card.affordable = function(count)
 				local n = math.min(count, left)
 				return n >= 1 and wallet >= pack.price * n

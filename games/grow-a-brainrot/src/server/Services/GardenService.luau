@@ -41,8 +41,25 @@ local function mutationOf(tile)
 	return Mutations.byId[tile.mutation or "Normal"] or Mutations.byId.Normal
 end
 
-local function incomeOf(tile)
-	return Brainrots.byId[tile.id].income * mutationOf(tile).mult * (tile.size or 1)
+local function multiplierOf(session)
+	local player = session.player
+	local mult = services.ProgressService.incomeMultiplier(session.data)
+	if services.MonetizationService.owns(player, "DoubleCash") then
+		mult *= 2
+	end
+	if services.MonetizationService.owns(player, "VIP") then
+		mult *= 1.25
+	end
+	if player:GetAttribute("FriendBoost") then
+		mult *= 1.1
+	end
+	return mult
+end
+
+-- cash/sec of one grown brainrot, including the owner's multipliers
+local function incomeOf(tile, session)
+	local base = Brainrots.byId[tile.id].income * mutationOf(tile).mult * (tile.size or 1)
+	return if session then base * multiplierOf(session) else base
 end
 
 local function setTileAttributes(tilePart, tile)
@@ -53,13 +70,13 @@ local function setTileAttributes(tilePart, tile)
 	tilePart:SetAttribute("State", tile and tile.state or nil)
 end
 
-local function makeBillboard(model, def, tile)
+local function makeBillboard(model, def, tile, session)
 	local rarity = Rarities.byName[def.rarity]
 	local gui = Instance.new("BillboardGui")
 	gui.Name = "Info"
 	gui.Size = UDim2.fromOffset(200, 70)
 	gui.StudsOffsetWorldSpace = Vector3.new(0, model:GetExtentsSize().Y + 1.5, 0)
-	gui.MaxDistance = 80
+	gui.MaxDistance = 45
 	gui.LightInfluence = 0
 	local list = Instance.new("UIListLayout")
 	list.HorizontalAlignment = Enum.HorizontalAlignment.Center
@@ -81,7 +98,7 @@ local function makeBillboard(model, def, tile)
 	local sizeTag = if tile.size >= 2 then "HUGE " elseif tile.size >= 1.5 then "Big " else ""
 	local mutationTag = if mutation.id ~= "Normal" then mutation.name .. " " else ""
 	line("Name", mutationTag .. sizeTag .. def.name, if mutation.id ~= "Normal" then mutation.color else rarity.color, 24)
-	line("Rate", Format.cash(incomeOf(tile)) .. "/s", Color3.fromRGB(150, 255, 150), 20)
+	line("Rate", Format.cash(incomeOf(tile, session)) .. "/s", Color3.fromRGB(150, 255, 150), 20)
 	line("Stored", "", Color3.fromRGB(255, 240, 150), 22)
 	gui.Parent = model.PrimaryPart
 	return gui
@@ -93,7 +110,7 @@ local function spawnBrainrot(session, index, tile)
 	local model = BrainrotModels.build(tile.id, tile.size, tile.mutation)
 	model.Name = "Brainrot" .. index
 	model:PivotTo(tilePart.CFrame * CFrame.new(0, tilePart.Size.Y / 2, 0))
-	makeBillboard(model, def, tile)
+	makeBillboard(model, def, tile, session)
 
 	local prompt = Instance.new("ProximityPrompt")
 	prompt.Name = "SellPrompt"
@@ -120,6 +137,10 @@ local function grow(session, index, tile)
 	tile.stored = 0
 	local data = session.data
 	data.stats.grown += 1
+	services.ProgressService.track(session.player, "grown")
+	if Rarities.byName[def.rarity].order >= Rarities.byName.Rare.order then
+		services.ProgressService.track(session.player, "grownRare")
+	end
 	local isNew = not data.index[tile.id]
 	data.index[tile.id] = true
 
@@ -161,6 +182,7 @@ function GardenService.plant(player, index, seedKey)
 	local tile = { id = id, mutation = mutation, plantedAt = now(), growTime = def.growTime, state = "growing" }
 	data.tiles[key] = tile
 	data.stats.planted += 1
+	services.ProgressService.track(player, "planted")
 
 	local tilePart = services.PlotService.getTile(session.plot, index)
 	setTileAttributes(tilePart, tile)
@@ -176,7 +198,7 @@ function GardenService.sell(player, index)
 		return
 	end
 	local def = Brainrots.byId[tile.id]
-	local value = incomeOf(tile) * GameConfig.SellIncomeSeconds + (tile.stored or 0)
+	local value = incomeOf(tile, session) * GameConfig.SellIncomeSeconds + (tile.stored or 0)
 	session.data.tiles[key] = nil
 	local model = session.models[index]
 	if model then
@@ -187,6 +209,8 @@ function GardenService.sell(player, index)
 	setTileAttributes(tilePart, nil)
 	services.EconomyService.add(player, value)
 	fx:FireClient(player, "Cash", value, tilePart.Position, "SOLD")
+	services.ProgressService.track(player, "sold")
+	services.AnalyticsService.economy(player, "Source", "Cash", value, session.data.cash, "Gameplay", "SellBrainrot")
 end
 
 function GardenService.collect(player)
@@ -204,7 +228,14 @@ function GardenService.collect(player)
 	if total >= 1 then
 		services.EconomyService.add(player, total)
 		fx:FireClient(player, "Cash", total, session.plot.CollectPad.Position, "COLLECTED")
+		services.ProgressService.track(player, "collected")
+		services.AnalyticsService.economy(player, "Source", "Cash", total, session.data.cash, "Gameplay", "Collect")
 	end
+end
+
+function GardenService.getMultiplier(player): number
+	local session = sessions[player]
+	return if session then multiplierOf(session) else services.ProgressService.incomeMultiplier(services.DataService.get(player) or { rebirths = 0, indexClaimed = {} })
 end
 
 function GardenService.getIncome(player): number
@@ -215,7 +246,7 @@ function GardenService.getIncome(player): number
 	local total = 0
 	for _, tile in session.data.tiles do
 		if tile.state == "grown" and not tile.carried then
-			total += incomeOf(tile)
+			total += incomeOf(tile, session)
 		end
 	end
 	return total
@@ -235,7 +266,7 @@ function GardenService.loadPlayer(player, data, plot)
 		local elapsed = math.clamp(os.time() - data.lastSave, 0, GameConfig.OfflineCapSeconds)
 		for _, tile in data.tiles do
 			if tile.state == "grown" then
-				local earned = incomeOf(tile) * elapsed * GameConfig.OfflineEarnRate
+				local earned = incomeOf(tile, session) * elapsed * GameConfig.OfflineEarnRate
 				tile.stored = (tile.stored or 0) + earned
 				offline += earned
 			end
@@ -461,9 +492,15 @@ function GardenService.start()
 			task.wait(1)
 			for _, session in sessions do
 				local stored = 0
+				local auto = services.MonetizationService.owns(session.player, "AutoCollect")
+				local autoTotal = 0
 				for key, tile in session.data.tiles do
 					if tile.state == "grown" and not tile.carried then
-						tile.stored = (tile.stored or 0) + incomeOf(tile)
+						if auto then
+							autoTotal += incomeOf(tile, session) + (tile.stored or 0)
+							tile.stored = 0
+						end
+						tile.stored = (tile.stored or 0) + (if auto then 0 else incomeOf(tile, session))
 						stored += tile.stored
 						local model = session.models[tonumber(key)]
 						local info = model and model.PrimaryPart and model.PrimaryPart:FindFirstChild("Info")
@@ -472,7 +509,10 @@ function GardenService.start()
 						end
 					end
 				end
-				session.plot.CollectPad.Stored.Text.Text = "COLLECT " .. Format.cash(stored)
+				session.plot.CollectPad.Stored.Text.Text = if auto then "AUTO-COLLECT ON" else "COLLECT " .. Format.cash(stored)
+				if autoTotal > 0 then
+					services.EconomyService.add(session.player, autoTotal)
+				end
 			end
 		end
 	end)

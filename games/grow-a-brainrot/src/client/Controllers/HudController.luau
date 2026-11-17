@@ -55,7 +55,7 @@ function HudController.start(controllers)
 	local stack = Kit.autoScale(Kit.new("Frame", {
 		AnchorPoint = Vector2.new(0, 0.5),
 		Position = UDim2.new(0, 18, 0.5, 10),
-		Size = UDim2.fromOffset(320, 420),
+		Size = UDim2.fromOffset(320, 520),
 		BackgroundTransparency = 1,
 		Parent = gui,
 	}))
@@ -85,7 +85,7 @@ function HudController.start(controllers)
 	local phaseLabel = Kit.label({ Position = UDim2.fromOffset(14, 4), Size = UDim2.new(1, -28, 1, -8), Text = "", TextScaled = true, TextXAlignment = Enum.TextXAlignment.Left, Parent = phaseChip })
 
 	-- menu buttons (2 columns)
-	local grid = Kit.new("Frame", { Position = UDim2.fromOffset(8, 196), Size = UDim2.fromOffset(310, 200), BackgroundTransparency = 1, Parent = stack })
+	local grid = Kit.new("Frame", { Position = UDim2.fromOffset(8, 196), Size = UDim2.fromOffset(310, 280), BackgroundTransparency = 1, Parent = stack })
 	Kit.new("UIGridLayout", { CellSize = UDim2.fromOffset(148, 58), CellPadding = UDim2.fromOffset(8, 10), SortOrder = Enum.SortOrder.LayoutOrder, Parent = grid })
 	menuButton(grid, "🛒", "Shop", Kit.Theme.Pink, 1, function()
 		controllers.ShopController.toggle()
@@ -105,7 +105,25 @@ function HudController.start(controllers)
 			Sfx.play("ui_error")
 		end
 	end)
-	local restockChip, restockLabel = Kit.chip({ Parent = stack, Position = UDim2.fromOffset(8, 330), Text = "restock 5:00" })
+	local questButton = menuButton(grid, "📜", "Quests", Kit.Theme.Orange, 4, function()
+		controllers.ProgressController.openQuests()
+	end)
+	menuButton(grid, "📖", "Index", Kit.Theme.Purple, 5, function()
+		controllers.IndexController.toggle()
+	end)
+	menuButton(grid, "♻️", "Rebirth", Color3.fromRGB(190, 90, 255), 6, function()
+		controllers.RebirthController.toggle()
+	end)
+	menuButton(grid, "💎", "Store", Kit.Theme.Yellow, 7, function()
+		controllers.StoreController.toggle()
+	end)
+	-- red notification dot on Quests (claimable quests / login reward)
+	local badge = Kit.new("Frame", { AnchorPoint = Vector2.new(0.5, 0.5), Position = UDim2.new(1, -4, 0, 4), Size = UDim2.fromOffset(26, 26), BackgroundColor3 = Kit.Theme.Red, Visible = false, ZIndex = 5, Parent = questButton })
+	Kit.corner(badge, 999)
+	Kit.stroke(badge, Kit.Theme.Outline, 2)
+	local badgeLabel = Kit.label({ Size = UDim2.fromScale(1, 1), Text = "1", TextScaled = true, ZIndex = 6, Parent = badge })
+
+	local restockChip, restockLabel = Kit.chip({ Parent = stack, Position = UDim2.fromOffset(8, 478), Text = "restock 5:00" })
 	restockChip.Visible = true
 
 	-- top center: luck event banner + claim banner
@@ -171,6 +189,12 @@ function HudController.start(controllers)
 				tostring(ReplicatedStorage:GetAttribute("Luck") or 1),
 				tostring(ReplicatedStorage:GetAttribute("MutationLuck") or 1),
 				Format.time(luckEnds - now))
+		end
+		local count = controllers.ProgressController.badgeCount()
+		badge.Visible = count > 0
+		badgeLabel.Text = tostring(count)
+		if badge.Visible then
+			badge.Rotation = math.sin(os.clock() * 6) * 10
 		end
 		claimBanner.Visible = data.plotIndex == nil
 		if claimBanner.Visible then

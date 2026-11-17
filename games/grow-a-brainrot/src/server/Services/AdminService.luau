@@ -257,9 +257,43 @@ function handlers.reset(admin, args)
 		if data and plot then
 			services.GardenService.loadPlayer(player, data, plot)
 		end
+		services.ProgressService.onPlayerLoaded(player)
 		services.SyncService.mark(player)
 		reply(player, "Your save was reset by an admin.", BAD)
 	end
+end
+
+function handlers.tutorial(admin, args)
+	for _, player in targets(admin, args[1]) do
+		local data = services.DataService.get(player)
+		if data then
+			data.tutorial = 1
+			data.tutorialProgress = 0
+			services.SyncService.mark(player)
+		end
+	end
+end
+
+function handlers.daily(admin, args)
+	for _, player in targets(admin, args[1]) do
+		local data = services.DataService.get(player)
+		if data then
+			data.daily.claimedDay = 0
+			services.SyncService.mark(player)
+		end
+	end
+end
+
+function handlers.rebirths(admin, args)
+	local n = math.max(0, math.floor(num(args[1], 0)))
+	for _, player in targets(admin, args[2]) do
+		local data = services.DataService.get(player)
+		if data then
+			data.rebirths = n
+			services.SyncService.mark(player)
+		end
+	end
+	reply(admin, "Rebirths set to " .. n)
 end
 
 function handlers.announce(_, args)

@@ -42,6 +42,7 @@ local function sell(player, key: string, count: number): number
 		data.seeds[key] = nil
 	end
 	services.EconomyService.add(player, value)
+	services.ProgressService.track(player, "sold", count)
 	return value
 end
 

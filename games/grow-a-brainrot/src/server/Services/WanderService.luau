@@ -139,6 +139,7 @@ function WanderService.spawn(id: string?, mutationId: string?, free: boolean?)
 		services.SyncService.mark(player)
 		fx:FireClient(player, "Toast", "You caught " .. fullName .. "! Its seed is in your hotbar.", color)
 		services.FameService.record(string.format("%s caught the wild %s!", player.DisplayName, fullName), color)
+		services.ProgressService.track(player, "wildCaught")
 		finish()
 	end)
 
