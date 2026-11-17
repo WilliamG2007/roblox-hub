@@ -112,7 +112,7 @@ local function rebuild()
 			buttons[key] = button
 		end
 		button.LayoutOrder = i
-		button.Count.Text = "x" .. counts[key]
+		Kit.face(button).Count.Text = "x" .. counts[key]
 	end
 	for id, button in buttons do
 		if not wanted[id] then
