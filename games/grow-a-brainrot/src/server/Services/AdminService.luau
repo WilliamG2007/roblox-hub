@@ -284,18 +284,6 @@ function handlers.daily(admin, args)
 	end
 end
 
-function handlers.rebirths(admin, args)
-	local n = math.max(0, math.floor(num(args[1], 0)))
-	for _, player in targets(admin, args[2]) do
-		local data = services.DataService.get(player)
-		if data then
-			data.rebirths = n
-			services.SyncService.mark(player)
-		end
-	end
-	reply(admin, "Rebirths set to " .. n)
-end
-
 function handlers.announce(_, args)
 	local text = table.concat(args, " ")
 	assert(text ~= "", "nothing to announce")

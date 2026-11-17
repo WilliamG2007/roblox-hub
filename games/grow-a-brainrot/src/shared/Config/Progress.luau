@@ -1,4 +1,4 @@
--- Onboarding tutorial, daily login streak, daily quests, Index rewards, rebirth.
+-- Onboarding tutorial, daily login streak, daily quests, Index rewards.
 -- Cash rewards scale with your income so they stay meaningful:
 --   { incomeSeconds = N, min = M } = max(M, your income/sec * N)
 
@@ -40,16 +40,5 @@ Progress.QuestsPerDay = 3
 -- Index: completing a rarity row (growing every brainrot of that rarity) can be
 -- claimed for a permanent income bonus.
 Progress.IndexBonusPerRarity = 0.05
-
--- Rebirth: reset cash, seeds and garden for a permanent income multiplier.
-Progress.Rebirth = {
-	BaseCost = 1e6,
-	CostGrowth = 8,
-	IncomeBonus = 0.5, -- +50% income per rebirth
-}
-
-function Progress.rebirthCost(rebirths: number): number
-	return Progress.Rebirth.BaseCost * Progress.Rebirth.CostGrowth ^ rebirths
-end
 
 return Progress

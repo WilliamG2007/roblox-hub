@@ -54,11 +54,6 @@ table.insert(Packs.list, {
 	stockChance = 1, stock = { 3, 5 }, pity = { rarity = "Legendary", count = 15 },
 })
 
--- top tiers unlock with rebirths (long-term goals)
-Packs.list[8].rebirth = 1 -- Tralala Pack
-Packs.list[9].rebirth = 2 -- 67 Pack
-Packs.list[10].rebirth = 3 -- Cosmic Brainrot Pack
-
 Packs.byId = {}
 for i, pack in Packs.list do
 	pack.order = i

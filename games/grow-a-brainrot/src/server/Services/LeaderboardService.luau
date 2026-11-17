@@ -1,6 +1,6 @@
 -- Global leaderboards (OrderedDataStore) shown on boards in the world:
 --   Richest   total cash ever earned (stored as a scaled log so huge numbers fit)
---   Rebirths  rebirth count
+--   Collectors  how many different brainrots discovered
 -- Boards are added to the map at runtime if the baked map doesn't have them.
 
 local DataStoreService = game:GetService("DataStoreService")
@@ -16,7 +16,7 @@ local P = Style.Palette
 local services
 local BOARDS = {
 	{ key = "Richest", title = "💰 RICHEST", color = P.Gold, position = Vector3.new(118, 0.5, 0) },
-	{ key = "Rebirths", title = "♻️ REBIRTHS", color = P.Purple, position = Vector3.new(-118, 0.5, 0) },
+	{ key = "Collectors", title = "📖 COLLECTORS", color = P.Purple, position = Vector3.new(-118, 0.5, 0) },
 }
 local stores = {}
 local lines = {} -- [key] = { TextLabel }
@@ -26,7 +26,11 @@ local function encode(key, data)
 	if key == "Richest" then
 		return math.floor(math.log10(math.max(1, data.allTotal)) * 1e6)
 	end
-	return data.rebirths
+	local found = 0
+	for _ in data.index do
+		found += 1
+	end
+	return found
 end
 
 local function decode(key, value)

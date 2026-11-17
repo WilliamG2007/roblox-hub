@@ -190,18 +190,6 @@ local function refresh()
 			local tenCount = math.min(10, item.left)
 			local wallet = if pack.currency == "shards" then data.shards or 0 else data.cash
 			local left = item.left
-			local locked = (pack.rebirth or 0) > (data.progress and data.progress.rebirths or 0)
-			if locked then
-				card.affordable = function()
-					return false
-				end
-				card.one.Text = "🔒"
-				card.ten.Text = "R" .. pack.rebirth
-				card.one.BackgroundColor3 = Kit.Theme.Disabled
-				card.ten.BackgroundColor3 = Kit.Theme.Disabled
-				card.stock.Text = string.format("🔒 Unlocks at Rebirth %d", pack.rebirth)
-				continue
-			end
 			card.one.Text = "OPEN"
 			card.affordable = function(count)
 				local n = math.min(count, left)

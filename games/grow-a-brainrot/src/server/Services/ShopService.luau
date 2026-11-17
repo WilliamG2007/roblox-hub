@@ -167,10 +167,6 @@ function ShopService.buy(player, packId, count)
 		return
 	end
 	local data = services.DataService.get(player)
-	if (pack.rebirth or 0) > data.rebirths then
-		fx:FireClient(player, "Toast", string.format("%s unlocks at Rebirth %d!", pack.name, pack.rebirth), Color3.fromRGB(255, 120, 120))
-		return
-	end
 	count = math.clamp(math.floor(tonumber(count) or 1), 1, GameConfig.MaxOpenAtOnce)
 	local item
 	for _, stocked in currentStock do

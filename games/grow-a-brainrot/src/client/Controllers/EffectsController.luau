@@ -336,7 +336,7 @@ local function screenCelebrate(text, color)
 	end
 end
 
--- big happy moment: claiming a garden, rewards, rebirths, purchases
+-- big happy moment: claiming a garden, rewards, Index rows, purchases
 function handlers.Celebrate(position, color, text)
 	color = color or Color3.fromRGB(255, 215, 80)
 	if position then

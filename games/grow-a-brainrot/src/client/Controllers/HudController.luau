@@ -111,9 +111,6 @@ function HudController.start(controllers)
 	menuButton(grid, "📖", "Index", Kit.Theme.Purple, 5, function()
 		controllers.IndexController.toggle()
 	end)
-	menuButton(grid, "♻️", "Rebirth", Color3.fromRGB(190, 90, 255), 6, function()
-		controllers.RebirthController.toggle()
-	end)
 	menuButton(grid, "💎", "Store", Kit.Theme.Yellow, 7, function()
 		controllers.StoreController.toggle()
 	end)
@@ -123,7 +120,7 @@ function HudController.start(controllers)
 	Kit.stroke(badge, Kit.Theme.Outline, 2)
 	local badgeLabel = Kit.label({ Size = UDim2.fromScale(1, 1), Text = "1", TextScaled = true, ZIndex = 6, Parent = badge })
 
-	local restockChip, restockLabel = Kit.chip({ Parent = stack, Position = UDim2.fromOffset(8, 478), Text = "restock 5:00" })
+	local restockChip, restockLabel = Kit.chip({ Parent = stack, Position = UDim2.fromOffset(8, 404), Text = "restock 5:00" })
 	restockChip.Visible = true
 
 	-- top center: luck event banner + claim banner

@@ -27,7 +27,6 @@ return {
 	{ name = "reset", usage = "reset <target>", desc = "Wipe a player's save back to new (careful!)" },
 	{ name = "tutorial", usage = "tutorial [target]", desc = "Restart the tutorial" },
 	{ name = "daily", usage = "daily [target]", desc = "Make today's login reward claimable again" },
-	{ name = "rebirths", usage = "rebirths <n> [target]", desc = "Set rebirth count" },
 	{ name = "announce", usage = "announce <text...>", desc = "Big announcement to the server" },
 	{ name = "speed", usage = "speed <walkspeed> [target]", desc = "Set walk speed" },
 	{ name = "tp", usage = "tp <target>", desc = "Teleport to a player's garden" },

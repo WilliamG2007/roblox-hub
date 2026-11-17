@@ -3,7 +3,6 @@
 --   daily login   7-day streak with growing rewards (UTC days)
 --   daily quests  3 per day from a pool, claim for rewards
 --   Index         claim a permanent income bonus per completed rarity row
---   rebirth       reset for a permanent income multiplier + pack unlocks
 -- Other services report what happened with ProgressService.track(player, event, amount).
 
 local Players = game:GetService("Players")
@@ -11,7 +10,6 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage.Shared
 local Progress = require(Shared.Config.Progress)
-local GameConfig = require(Shared.Config.Game)
 local Brainrots = require(Shared.Config.Brainrots)
 local Packs = require(Shared.Config.Packs)
 local Format = require(Shared.Format)
@@ -25,14 +23,6 @@ local GOLD = Color3.fromRGB(255, 215, 80)
 
 local function today()
 	return math.floor(os.time() / 86400)
-end
-
-local function copy(t)
-	local c = {}
-	for k, v in t do
-		c[k] = if type(v) == "table" then copy(v) else v
-	end
-	return c
 end
 
 --------------------------------------------------------------------------------
@@ -157,7 +147,7 @@ function ProgressService.incomeMultiplier(data): number
 	for _ in data.indexClaimed do
 		claimed += 1
 	end
-	return (1 + data.rebirths * Progress.Rebirth.IncomeBonus) * (1 + claimed * Progress.IndexBonusPerRarity)
+	return 1 + claimed * Progress.IndexBonusPerRarity
 end
 
 --------------------------------------------------------------------------------
@@ -198,24 +188,6 @@ function actions.ClaimIndex(player, data, rarityName)
 	fx:FireClient(player, "Celebrate", nil, GOLD, rarityName:upper() .. " INDEX COMPLETE!")
 	fx:FireClient(player, "Toast", string.format("%s row complete! +%d%% income forever.", rarityName, Progress.IndexBonusPerRarity * 100), GOLD)
 	services.SyncService.mark(player)
-end
-
-function actions.Rebirth(player, data)
-	local cost = Progress.rebirthCost(data.rebirths)
-	if data.cash < cost then
-		fx:FireClient(player, "Toast", "You need " .. Format.cash(cost) .. " to rebirth!", Color3.fromRGB(255, 120, 120))
-		return
-	end
-	data.rebirths += 1
-	services.AnalyticsService.economy(player, "Sink", "Cash", data.cash, 0, "Gameplay", "Rebirth")
-	services.GardenService.clearGarden(player)
-	data.cash = GameConfig.StartingCash
-	data.seeds = copy(GameConfig.StarterSeeds)
-	data.pity = {}
-	services.SyncService.mark(player)
-	fx:FireClient(player, "Celebrate", nil, Color3.fromRGB(200, 120, 255), "REBIRTH " .. data.rebirths .. "!")
-	services.FameService.record(string.format("%s REBIRTHED! (Rebirth %d, x%.1f income)", player.DisplayName, data.rebirths, ProgressService.incomeMultiplier(data)), Color3.fromRGB(200, 120, 255))
-	services.AnalyticsService.event(player, "Rebirth", data.rebirths)
 end
 
 function actions.SkipTutorial(player, data)
@@ -270,8 +242,6 @@ function ProgressService.snapshot(player)
 		questsResetIn = (day + 1) * 86400 - os.time(),
 		streak = data.daily.streak,
 		dailyClaimable = data.daily.lastDay == day and data.daily.claimedDay ~= day,
-		rebirths = data.rebirths,
-		rebirthCost = Progress.rebirthCost(data.rebirths),
 		indexClaimed = data.indexClaimed,
 		multiplier = services.GardenService.getMultiplier(player),
 	}

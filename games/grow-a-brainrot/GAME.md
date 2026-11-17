@@ -120,9 +120,8 @@ Random, about every 15–25 min, lasting 2–3 min: **Pasta Rain**, **Thundersto
 - Every brainrot × mutation combination you've grown gets a filled entry.
 - Completing a rarity row gives permanent rewards (+income %, a free seed, a title).
 
-### 9. Rebirth
-- Unlocked at a cash milestone. Resets cash, plot size and brainrots. Keeps the Index, Moon Shards and gamepasses.
-- Gives a permanent **+50% income** per rebirth and unlocks a new seed tier in the shop.
+### 9. ~~Rebirth~~ (scrapped, Nov 2026)
+- Decided against: wiping players' brainrots feels bad in a collecting game. Long-term progression comes from the Index bonuses, pack tiers, mutations and dailies instead. If we want a prestige-like loop later, it must never take brainrots away.
 
 ### 10. Social and co-op
 - **Server announcements:** "PLAYER grew a RAINBOW Disco Pandarino!!" with a sound on everyone's screen.
@@ -173,11 +172,10 @@ Random, about every 15–25 min, lasting 2–3 min: **Pasta Rain**, **Thundersto
 - **Daily login streak**: 7-day reward calendar, pops up after the tutorial when claimable; missing a day resets.
 - **Daily quests**: 3 per day per player from a pool (open packs, plant, grow a Rare, collect, defeat monsters, sell, catch a wild brainrot, pull a mutation). Red dot on the Quests button when something is claimable.
 - **Brainrot Index** (`IndexController`): collection book by rarity with ??? silhouettes; completing a row is claimable for +5% income forever.
-- **Rebirth** (`RebirthController`): costs $1M × 8^rebirths; resets cash/seeds/garden, keeps Index/shards/passes, +50% income each; Tralala/67/Cosmic packs unlock at rebirth 1/2/3.
 - **Store** (`StoreController`, `MonetizationService`): passes FastRoll, 2x Cash, VIP (+25% + tag), Auto-Collect; products Cash Small/Large, Luck Potion (x2 pack luck 15 min, shown live in odds, hidden where paid random items are restricted), Instant Restock. Receipts are idempotent (stored in the save before granting). Set real IDs in `Config/GamePasses.luau`.
-- **Leaderboards** (`LeaderboardService`): Richest + Rebirths boards in the lawns (OrderedDataStore), added at runtime if the baked map lacks them.
+- **Leaderboards** (`LeaderboardService`): Richest + Collectors (brainrots discovered) boards in the lawns (OrderedDataStore), added at runtime if the baked map lacks them.
 - **Friend boost** (`SocialService`): a Roblox friend in the server gives +10% income, +25% Moon Shards.
-- **Analytics** (`AnalyticsService` wrapper): onboarding funnel, economy sources/sinks, rebirth events.
+- **Analytics** (`AnalyticsService` wrapper): onboarding funnel, economy sources/sinks.
 - **Signature models** in `BrainrotModels`: Tung Tung (log + bat), Tralalero (shark in sneakers), Bombardiro (croc bomber), Ballerina Cappuccina, Lirilì Larilà, Chimpanzini Bananini, Cappuccino Assassino, Lil 67, Strawberry Elephant, Brr Brr Patapim. Others use the generic bubbly body.
 - Not done: ProfileStore migration (needs a third-party download; current DataService has session locking).
 
@@ -226,7 +224,7 @@ White-to-cream panels, thick dark outlines, colored header bars with polka dots 
 | M2 | **Juice + roster** | rarities, sizes, pop effects, number popups, Index |
 | M3 | **Night** | day/night cycle, Grumblers, 67 boss, defense, rescue, Moon Shards |
 | M4 | **Hype** | mutations, weather, server announcements |
-| M5 | **Progression + money** | rebirth, gamepasses, dev products, odds UI, PolicyService |
+| M5 | **Progression + money** | gamepasses, dev products, odds UI, PolicyService |
 | M6 | **Launch prep** | first-60-seconds polish, icon + 3–5 thumbnails, maturity questionnaire, performance pass |
 
 ## Launch plan (Roblox's 2026 rules)

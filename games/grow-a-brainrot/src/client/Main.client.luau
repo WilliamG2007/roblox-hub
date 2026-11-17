@@ -4,7 +4,7 @@
 local ORDER = {
 	"State", "EffectsController", "HudController", "ShopController", "PackRevealController",
 	"PlantController", "GrowthController", "MutationFxController", "InventoryController", "AdminController",
-	"DecorController", "BrainrotAnimController", "ProgressController", "IndexController", "RebirthController",
+	"DecorController", "BrainrotAnimController", "ProgressController", "IndexController",
 	"StoreController",
 }
 

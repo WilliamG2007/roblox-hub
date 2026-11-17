@@ -235,7 +235,7 @@ end
 
 function GardenService.getMultiplier(player): number
 	local session = sessions[player]
-	return if session then multiplierOf(session) else services.ProgressService.incomeMultiplier(services.DataService.get(player) or { rebirths = 0, indexClaimed = {} })
+	return if session then multiplierOf(session) else services.ProgressService.incomeMultiplier(services.DataService.get(player) or { indexClaimed = {} })
 end
 
 function GardenService.getIncome(player): number
